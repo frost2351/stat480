@@ -1,0 +1,193 @@
+---
+title: "STAT 480 Project"
+author: "Kailee Ervin"
+date: "4/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(rmarkdown)
+library(ggplot2)
+library(forcats)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(stringr)
+library(scales)
+library(zoo)
+library(tidyverse)
+
+my_theme <- function (base_size = 12, base_family = "Times New Roman") {
+  theme_gray() +
+    theme(
+      rect = element_rect(fill = NA, linetype = 0, colour = NA, size = base_size/22),
+      text = element_text(family = base_family, face = "plain", color = "black", size = base_size, hjust = 0.5, vjust = 0.5, angle = 0, lineheight = 0.9, margin = margin(), debug = FALSE),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      plot.caption = element_text(color = "grey50"),
+      legend.position = "right",
+      panel.grid.minor.y = element_line(colour = "grey80"),
+      panel.grid.major.x = element_line(colour = "grey80", size = rel(0.25)),
+      panel.grid.minor = element_line(size = rel(0.25), colour = "grey80", linetype = "dotted"),
+      panel.grid.major.y = element_line(colour = "grey80", size = rel(0.3)),
+      plot.title = element_text(face = "bold", size = base_size * 1.5)
+    )
+}
+theme_set(my_theme())
+my_pal <- c("#16A08CFF", "plum3", "gold", "#EE0011FF", "#149BEDFF", "lightpink", "lightsalmon", "#A1C720FF", "#FA6B09FF", "paleturquoise", "seagreen", "palevioletred4", "lightpink", "navajowhite2", "lightblue3", "deepskyblue", "coral", "aquamarine")
+scale_colour_discrete <- function(...) {scale_colour_manual(..., values = my_pal)}
+scale_fill_discrete <- function(...) {scale_fill_manual(..., values = my_pal)}
+```
+
+Download Data
+```{r}
+youtube<-read.csv("youtube.csv", header=TRUE)
+```
+
+
+# Data cleaning
+```{r}
+youtube<-youtube %>% 
+  mutate(video_id=as.character(video_id),
+         trending_date=ydm(as.character(trending_date)),
+         title=as.character(title),
+         channel_title=as.character(channel_title),
+         category_id=recode(as.factor(category_id), "1"="Film & Animation", "2"="Autos & Vehicles", "10"="Music",
+                            "15"="Pets and Animals", "17"="Sports", "19"="Travel & Events", "20"="Gaming",
+                            "22"="People and Blogs", "23"="Comedy", "24"="Entertainment", 
+                            "25"="News and Politics", "26"="Howto & Style", "27"="Education", 
+                            "28"="Science & Technology", "29"="Nonprofits & Activism", "30"="Movies",
+                            "43"="Shows", "44"="Trailers"),
+         publish_date=dmy(as.character(publish_date)),
+         time_frame=factor(time_frame, levels=c("0:00 to 0:59","1:00 to 1:59","2:00 to 2:59","3:00 to 3:59",
+                                                "4:00 to 4:59","5:00 to 5:59","6:00 to 6:59","7:00 to 7:59",
+                                                "8:00 to 8:59","9:00 to 9:59","10:00 to 10:59","11:00 to 11:59",
+                                                "12:00 to 12:59","13:00 to 13:59","14:00 to 14:59",
+                                                "15:00 to 15:59","16:00 to 16:59","17:00 to 17:59",
+                                                "18:00 to 18:59","19:00 to 19:59","20:00 to 20:59",
+                                                "21:00 to 21:59","22:00 to 22:59","23:00 to 23:59")),
+         published_day_of_week=factor(published_day_of_week, levels=c("Monday", "Tuesday", "Wednesday",
+                                                                      "Thursday", "Friday", "Saturday",
+                                                                      "Sunday")),
+         tags=as.character(tags))
+```
+
+# Number of Trending Videos By Publish Country
+```{r}
+youtube %>% 
+  group_by(publish_country) %>% 
+  mutate(total_video=n()) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  summarise(`Distinct Videos`=n(),
+            `Total Obs`=mean(total_video)) %>% 
+  pivot_longer(cols=`Distinct Videos`:`Total Obs`,
+               names_to="total_type",
+               values_to="number_videos") %>% 
+  ggplot(aes(x=total_type, fill=publish_country))+
+  scale_fill_discrete(name="Publish Country")+
+  geom_bar(aes(weight=number_videos))+
+  facet_wrap(~publish_country)+
+  labs(title="Total Number of Videos vs. Total Distinct Videos By Country", y="Number of Videos", x="Type of Total")
+```
+
+
+# Are there differences in publishing times throughout the day for trending videos?
+```{r}
+youtube_time<-youtube %>% 
+  mutate(hour=recode(time_frame, "0:00 to 0:59"="1","1:00 to 1:59"="2","2:00 to 2:59"="3",
+                                          "3:00 to 3:59"="4","4:00 to 4:59"="5","5:00 to 5:59"="6",
+                                          "6:00 to 6:59"="7","7:00 to 7:59"="8","8:00 to 8:59"="9",
+                                          "9:00 to 9:59"="10","10:00 to 10:59"="11","11:00 to 11:59"="12",
+                                          "12:00 to 12:59"="13","13:00 to 13:59"="14","14:00 to 14:59"="15",
+                                          "15:00 to 15:59"="16","16:00 to 16:59"="17","17:00 to 17:59"="18",
+                                          "18:00 to 18:59"="19","19:00 to 19:59"="20","20:00 to 20:59"="21",
+                                          "21:00 to 21:59"="22","22:00 to 22:59"="23","23:00 to 23:59"="24"),
+         hour=as.character(hour),
+         hour=as.integer(hour)) %>% 
+  group_by(publish_country) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  mutate(distinct_videos=n()) %>% 
+  group_by(publish_country, hour) %>% 
+  summarise(time_frame_total=n(),
+            distinct_videos=mean(distinct_videos)) %>% 
+  mutate(time_frame_prop=case_when(publish_country=="CANADA"~time_frame_total/distinct_videos,
+                                      publish_country=="FRANCE"~time_frame_total/distinct_videos,
+                                      publish_country=="GB"~time_frame_total/distinct_videos,
+                                      publish_country=="US"~time_frame_total/distinct_videos))
+
+# Distribution of Publish Time by Country
+ggplot(youtube_time, aes(x=hour, fill=publish_country))+
+  geom_histogram(bindwidth=1)+
+  facet_grid(publish_country~.)+
+ labs(x="Hour", y="Proportion of Total Distinct Videos Published By Country", title="Distribution of Times When Trending Videos Published")
+
+curve(dnorm(x, mean=m, sd=std), 
+      col="darkblue", lwd=2, add=TRUE, yaxt="n")
+  
+```
+
+# Publishing Time throughout week by country?
+```{r}
+# By Week by Country
+youtube %>% 
+  group_by(publish_country) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  mutate(distinct_videos=n()) %>% 
+  group_by(publish_country, published_day_of_week) %>% 
+  summarise(time_frame_total=n(),
+            distinct_videos=mean(distinct_videos)) %>% 
+  mutate(time_frame_prop=case_when(publish_country=="CANADA"~time_frame_total/distinct_videos,
+                                      publish_country=="FRANCE"~time_frame_total/distinct_videos,
+                                      publish_country=="GB"~time_frame_total/distinct_videos,
+                                      publish_country=="US"~time_frame_total/distinct_videos)) %>% 
+  ggplot(aes(x=published_day_of_week, fill=publish_country))+
+  scale_fill_discrete(name="Publish Country")+
+  geom_bar(aes(weight=time_frame_prop))+
+  facet_grid(publish_country~.)+
+  labs(x="Day of Week", y="Proportion of Total Distinct Videos Published By Country", title="Days of Week When Trending Videos Published", subtitle="by Country")+
+  coord_flip()+
+  theme(text = element_text(family = "Times New Roman", color = "grey20"))
+
+```
+
+
+# Length Between Publish Date and Trending Date
+```{r}
+youtube_trend<-youtube %>% 
+  select(video_id, publish_date, trending_date) %>% 
+  group_by(video_id, publish_date) %>% 
+  summarise(first_trend=min(trending_date)) %>% 
+  mutate(days_to_trend=(publish_date %--% first_trend)/ddays(1)) %>% 
+  ungroup()
+
+youtube_trend %>% 
+  ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+  scale_color_continuous(name ="Days to Trending")+
+  geom_point(aes(alpha=0.4))+
+  labs(title="Days from Published to Trending", x="Publish Date", y="Days to Trending")
+```
+
+```{r}
+youtube_trend %>% 
+  filter(publish_date>="2017-11-14") %>% 
+  ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+  scale_color_continuous(name="Days to Trending")+
+  geom_point(aes(alpha=0.4))+
+  labs(title="Days from Published to Trending",subtitle="from November 14, 2017 to June 14, 2018", x="Publish Date", y="Days to Trending")
+```
+
+
+# What is the weird blank line in the middle????
+```{r}
+youtube %>% 
+  arrange(trending_date) %>% group_by(trending_date) %>% summarise(nbr_trending_videos=n()) %>% filter(trending_date>="2018-04-01", trending_date<="2018-04-30") %>% slice(1:10)
+```
+
+# Average Number of trending videos in each country each day (For Intro)
+```{r}
+youtube %>% group_by(publish_country, trending_date) %>% summarise(n=n()) %>% group_by(publish_country) %>% summarise(mean_videos=mean(n))
+```
+
