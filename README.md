@@ -1,1 +1,1 @@
-# stat480A line I wrote on my local computer
+# kailee's hello from Rstudio
