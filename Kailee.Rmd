@@ -88,9 +88,9 @@ youtube %>%
                values_to="number_videos") %>% 
   ggplot(aes(x=total_type, fill=publish_country))+
   scale_fill_discrete(name="Publish Country")+
-  geom_bar(aes(weight=number_videos))+
+  geom_bar(aes(weight=number_videos), show.legend = FALSE)+
   facet_wrap(~publish_country)+
-  labs(title="Total Number of Videos vs. Total Distinct Videos By Country", y="Number of Videos", x="Type of Total")
+  labs(title="Total Number of Videos \nvs. \nTotal Distinct Videos By Country", y="Number of Videos", x="Type of Total")
 ```
 
 
@@ -120,12 +120,10 @@ youtube_time<-youtube %>%
 
 # Distribution of Publish Time by Country
 ggplot(youtube_time, aes(x=hour, fill=publish_country))+
-  geom_histogram(bindwidth=1)+
+  scale_fill_discrete(name="Publish Country")+
+  geom_bar(aes(weight=time_frame_prop), show.legend = FALSE)+
   facet_grid(publish_country~.)+
- labs(x="Hour", y="Proportion of Total Distinct Videos Published By Country", title="Distribution of Times When Trending Videos Published")
-
-curve(dnorm(x, mean=m, sd=std), 
-      col="darkblue", lwd=2, add=TRUE, yaxt="n")
+ labs(x="Hour", y="Proportion of Total Distinct Videos Published By Country", title="Distribution of Times \nWhen Trending Videos are Published")
   
 ```
 

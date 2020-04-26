@@ -1,5 +1,6 @@
 ---
-title: "Exploring the Trends of Trending Videos: A Youtube Analysis"
+title: "CHEATING THE YOUTUBE SYSTEM???"
+subtitle: "Trending Youtube Video Analysis (NOT CLICKBAIT!!!)"
 author: "Taylor Buske, Kailee Ervin, Derek Thada, Saiyothin Vongpanya"
 date: "4/22/2020"
 output: html_document
@@ -44,10 +45,15 @@ scale_fill_discrete <- function(...) {scale_fill_manual(..., values = my_pal)}
 
 ## Introduction
 About our data:
-```{r, include=F}
+```{r, include=FALSE}
 youtube <- read_csv("https://raw.githubusercontent.com/frost2351/stat480/master/youtube.csv")
 str(youtube)
 ```
+# Average Number of trending videos in each country each day (For Intro)
+```{r, echo=FALSE}
+youtube %>% group_by(publish_country, trending_date) %>% summarise(n=n()) %>% group_by(publish_country) %>% summarise(mean_videos=mean(n))
+```
+
 Our YouTube data set has 161,470 records and 17 variables. The variables in this dataset are: "video_id", "trending_date", "title, "channel_title", "category_id"  "publish_date", "time_frame", "published_day_of_week", "publish_country", "tags", "views", "likes", "dislikes", "comment_count", "comments_disabled", "ratings_disabled", and "video_error_or_removed". The variables have various data types that we will be using in our analysis, including character, integer, boolean, and factors. Each row in the data set is a particular trending video on a specific trending date. Additionally, four separate countries are analyzed, the United States, Canada, Great Britain, and France. Each country has its own list of trending videos on each day. The trending videos are taken from November of 2017 to June of 2018. According to Google (the owner of YouTube), the trending list is updated approximately every 15 minutes **(Citation Needed)**. Thus, the number of videos that are trending throughout a day fluctuates. The number of videos on the trending list at any given time is around 200 in each country.
 
 
@@ -119,7 +125,7 @@ youtube$published_day_of_week1 <- fct_collapse(youtube$published_day_of_week,
 
 Our data consists of 18 different video categories. These categories are broad and range from “Pets and Animals” to “Music” to “News and Politics”. The graph below shows the number of trending videos in each category in our data.
 
-```{r Figure 1}
+```{r Figure 1, echo=FALSE}
 youtube %>% 
   group_by(category_id) %>% 
   mutate(n = n()) %>% 
@@ -137,7 +143,7 @@ Thus, we can see that “Entertainment” videos are the most frequent type of v
 We can also see how the number of trending videos in each category changes over time as well. Our data consists of trending videos from November of 2017 through June of 2018. Figure 2 below shows the number of trending videos over time in the categories “Entertainment,” “Music,” “People and Blogs,” “Comedy,” and “News and Politics”. These categories are the top five categories with the most trending videos as shown above. We aim to answer the following question: 
 
 How has the number of trending videos for different categories change over time?
-```{r Figure 2}
+```{r Figure 2, echo=FALSE}
 left_right <- youtube %>% 
   filter(category_id %in% c("Entertainment", "Music",
                             "People and Blogs", "Comedy",
@@ -180,7 +186,7 @@ In analyzing the above graph, we see that the number of trending videos for “E
 
 ### How do people view trending videos for different categories?
 
-```{r Figure 3}
+```{r Figure 3, echo=FALSE}
 youtube %>%
   group_by(video_id) %>% 
   slice(which.max(trending_date)) %>% 
@@ -200,7 +206,7 @@ youtube %>%
 ```
 
 ### How do people comment on trending videos for different categories?
-```{r Figure 4}
+```{r Figure 4, echo=FALSE}
 youtube %>%
   group_by(video_id) %>% 
   slice(which.max(trending_date)) %>% 
@@ -219,7 +225,7 @@ youtube %>%
   scale_y_continuous(labels = scales::comma)
 ```
 
-```{r Comments per View}
+```{r Comments per View, echo=FALSE}
 youtube %>%
   group_by(category_id) %>%
   summarise(total_comments = sum(comment_count),
@@ -234,7 +240,7 @@ youtube %>%
 ## First Impressions: Titles and Their Effects on Trending Videos
 
 ### Do Different countries use differing amount of capital letters in their trending videos?
-```{r Capital Letters}
+```{r Capital Letters, echo=FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   mutate(avg_capitals_per_title_length = str_count(title, "[A-Z]") / str_length(title)) %>% 
@@ -251,7 +257,7 @@ youtube %>%
 ```
 
 ### Have trending videos seen a change in their usage of capital letters?
-```{r more Capital Letters}
+```{r more Capital Letters, echo=FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   mutate(number_capitals = str_count(title, "[A-Z]"),
@@ -271,7 +277,7 @@ youtube %>%
 ```
 
 ### Is there a discernible trend in the usage of exclamation marks?
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   mutate(number_exclamation = str_count(title, "\\!")) %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
@@ -288,7 +294,7 @@ youtube %>%
 ```
 
 ## Is there a discernible trend in the usage of question marks?
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   mutate(number_question = str_count(title, "\\?"),
          avg_capitals_per_title_length = str_count(title, "[A-Z]") / str_length(title)) %>% 
@@ -306,7 +312,7 @@ youtube %>%
 ```
 
 ### Is there a discernible trend in the the length of trending video titles?
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   mutate(title_length = str_length(title)) %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
@@ -325,27 +331,25 @@ youtube %>%
 ## Regional Differences: Exploring Across the Sea
 
 ### Number of Trending Videos By Publish Country
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   group_by(publish_country) %>% 
   mutate(total_video=n()) %>% 
   distinct(video_id, .keep_all=TRUE) %>% 
-  summarise(distinct_videos=n(),
-            total_obs=mean(total_video)) %>% 
-  pivot_longer(cols=distinct_videos:total_obs,
+  summarise(`Distinct Videos`=n(),
+            `Total Obs`=mean(total_video)) %>% 
+  pivot_longer(cols=`Distinct Videos`:`Total Obs`,
                names_to="total_type",
                values_to="number_videos") %>% 
   ggplot(aes(x=total_type, fill=publish_country))+
   scale_fill_discrete(name="Publish Country")+
-  geom_bar(aes(weight=number_videos))+
+  geom_bar(aes(weight=number_videos), show.legend = FALSE)+
   facet_wrap(~publish_country)+
-  labs(title = "Total Number of Videos vs. Total Distinct Videos By Country", 
-       y = "Number of Videos", 
-       x = "Type of Total")
+  labs(title="Total Number of Videos \nvs. \nTotal Distinct Videos By Country", y="Number of Videos", x="Type of Total")
 ```
 
 ## Are there differences in publishing times throughout the day for trending videos?
-```{r}
+```{r, echo=FALSE}
 youtube_time<-youtube %>% 
   mutate(hour=recode(time_frame, "0:00 to 0:59"="1","1:00 to 1:59"="2","2:00 to 2:59"="3",
                                           "3:00 to 3:59"="4","4:00 to 4:59"="5","5:00 to 5:59"="6",
@@ -369,13 +373,13 @@ youtube_time<-youtube %>%
 # Distribution of Publish Time by Country
 ggplot(youtube_time, aes(x=hour, fill=publish_country))+
   scale_fill_discrete(name="Publish Country")+
-  geom_bar(aes(weight=time_frame_prop))+
+  geom_bar(aes(weight=time_frame_prop), show.legend = FALSE)+
   facet_grid(publish_country~.)+
- labs(x="Hour", y="Proportion of Total Distinct Videos Published By Country", title="Distribution of Times When Trending Videos are Published")
+ labs(x="Hour", y="Proportion of Total Distinct Videos Published By Country", title="Distribution of Times \nWhen Trending Videos are Published")
 ```
 
 ## Publishing Time throughout week by country?
-```{r}
+```{r, echo=FALSE}
 # By Week by Country
 youtube %>% 
   group_by(publish_country) %>% 
@@ -390,7 +394,7 @@ youtube %>%
                                       publish_country=="US"~time_frame_total/distinct_videos)) %>% 
   ggplot(aes(x=published_day_of_week, fill=publish_country))+
   scale_fill_discrete(name="Publish Country")+
-  geom_bar(aes(weight=time_frame_prop))+
+  geom_bar(aes(weight=time_frame_prop), show.legend = FALSE)+
   facet_grid(publish_country~.)+
   labs(x="Day of Week", y="Proportion of Total Distinct Videos Published By Country", title="Days of Week When Trending Videos Published", subtitle="by Country")+
   coord_flip()+
@@ -398,7 +402,7 @@ youtube %>%
 ```
 
 ## Length Between Publish Date and Trending Date
-```{r}
+```{r, echo=FALSE}
 # Code takes a long time to run?
 youtube_trend<-youtube %>%
   select(video_id, publish_date, trending_date) %>%
@@ -412,10 +416,11 @@ youtube_trend %>%
   scale_color_continuous(name ="Days to Trending")+
   geom_point(aes(alpha=0.4))+
   labs(title="Days from Published to Trending", x="Publish Date", y="Days to Trending")
+
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 youtube_trend %>% 
   filter(publish_date>="2017-11-14") %>% 
   ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
@@ -429,20 +434,16 @@ youtube_trend %>%
 
 
 # What is the weird blank line in the middle????
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   arrange(trending_date) %>% group_by(trending_date) %>% summarise(nbr_trending_videos=n()) %>% filter(trending_date>="2018-04-01", trending_date<="2018-04-30") %>% slice(1:10)
 ```
 
-# Average Number of trending videos in each country each day (For Intro)
-```{r}
-youtube %>% group_by(publish_country, trending_date) %>% summarise(n=n()) %>% group_by(publish_country) %>% summarise(mean_videos=mean(n))
-```
 
 
 ## Numbers and Analytics: Exploring the Statistics of Trending Videos
 
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   ggplot(aes(x=views, y=likes)) + geom_point(aes(color = publish_country, alpha=0), 
@@ -453,7 +454,7 @@ youtube %>%
   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) 
 ```
 
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   filter(category_id == "Music") %>% 
@@ -467,7 +468,7 @@ youtube %>%
   geom_smooth(method = "lm", color="grey20", se=FALSE)
 ```
 
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   filter(category_id == "Music") %>% 
@@ -482,11 +483,11 @@ youtube %>%
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   group_by(video_id) %>% 
-  mutate(trend_diff = trending.date - lag(trending.date, order_by = trending.date)) %>% 
-  # select(trend_diff, trending.date, video_id) %>% 
+  mutate(trend_diff = trending_date - lag(trending_date, order_by = trending_date)) %>% 
+  select(video_id, trend_diff, trending_date, category_id) %>%
   arrange(desc(trend_diff)) %>% 
   distinct(video_id, .keep_all=TRUE) %>% 
   filter(trend_diff > 1) %>% 
@@ -500,7 +501,7 @@ youtube %>%
   theme(text = element_text(family = "Times New Roman", color = "grey20")) 
 ```
 
-```{r}
+```{r, echo=FALSE}
 youtube %>% 
   group_by(video_id) %>% 
   mutate(days_trending = n()) %>% 
@@ -514,7 +515,7 @@ youtube %>%
   theme(text = element_text(family = "Times New Roman", color = "grey20"))
 ```
 
-```{r}
+```{r, echo=FALSE}
 youtube_table <- youtube %>% 
   group_by(publish_country) %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
