@@ -44,7 +44,7 @@ scale_fill_discrete <- function(...) {scale_fill_manual(..., values = my_pal)}
 
 Download Data
 ```{r}
-youtube<-read.csv("youtube.csv", header=TRUE)
+youtube<-read_csv("https://raw.githubusercontent.com/frost2351/stat480/master/youtube.csv?token=AO7D46QTNVIF4KNJJZT2RUK6UDEE2")
 ```
 
 
