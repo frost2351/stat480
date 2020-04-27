@@ -123,7 +123,7 @@ ggplot(youtube_time, aes(x=hour, fill=publish_country))+
   scale_fill_discrete(name="Publish Country")+
   geom_bar(aes(weight=time_frame_prop), show.legend = FALSE)+
   facet_grid(publish_country~.)+
- labs(x="Hour", y="Proportion of Total Distinct Videos Published By Country", title="Distribution of Times \nWhen Trending Videos are Published")
+ labs(x="Hour", y="Proportion of Total Distinct Videos \nPublished By Country", title="Distribution of Times \nWhen Trending Videos are Published")
   
 ```
 
@@ -143,7 +143,7 @@ youtube %>%
                                       publish_country=="US"~time_frame_total/distinct_videos)) %>% 
   ggplot(aes(x=published_day_of_week, fill=publish_country))+
   scale_fill_discrete(name="Publish Country")+
-  geom_bar(aes(weight=time_frame_prop))+
+  geom_bar(aes(weight=time_frame_prop), show.legend=FALSE)+
   facet_grid(publish_country~.)+
   labs(x="Day of Week", y="Proportion of Total Distinct Videos Published By Country", title="Days of Week When Trending Videos Published", subtitle="by Country")+
   coord_flip()+
@@ -161,12 +161,48 @@ youtube_trend<-youtube %>%
   mutate(days_to_trend=(publish_date %--% first_trend)/ddays(1)) %>% 
   ungroup()
 
+
 youtube_trend %>% 
   ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
   scale_color_continuous(name ="Days to Trending")+
+  geom_smooth(method = "lm", color="grey20", alpha=0.3, size=0.7, se=FALSE)+
+  geom_point(aes(alpha=0.4))+
+  labs(title="Days from Published to Trending", x="Publish Date", y="Days to Trending")
+
+
+```
+
+```{r}
+#adjusting linear line
+youtube_old<-youtube_trend %>% 
+  filter(publish_date<"2017-11-14")
+
+youtube_trend %>% 
+  filter(publish_date<"2017-11-14") %>% 
+  summarise(n=n())
+# videos before november 14, 2017: 1115	
+youtube_trend %>% 
+  summarise(n=n())
+# total videos: 56106	
+
+  ggplot(data=youtube_trend, aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+  scale_color_continuous(name ="Days to Trending")+
+  geom_smooth(data=youtube_old, method = "lm", color="grey20", alpha=0.3, size=0.7, se=FALSE)+
+  geom_point(aes(alpha=0.4))+
+  labs(title="Days from Published to Trending", subtitle="Trendline: July 23, 2006 to November 14, 2017",x="Publish Date", y="Days to Trending")
+```
+
+
+```{r}
+#Looking at publish dates before november 14
+youtube_old %>% 
+  ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+  scale_color_continuous(name ="Days to Trending")+
+  geom_smooth(method = "lm", color="grey20", alpha=0.3, size=0.7, se=FALSE)+
   geom_point(aes(alpha=0.4))+
   labs(title="Days from Published to Trending", x="Publish Date", y="Days to Trending")
 ```
+
 
 ```{r}
 youtube_trend %>% 
