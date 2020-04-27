@@ -96,7 +96,33 @@ youtube %>%
 
 # Are there differences in publishing times throughout the day for trending videos?
 ```{r}
-youtube_time<-youtube %>% 
+# youtube_time<-youtube %>% 
+#   mutate(hour=recode(time_frame, "0:00 to 0:59"="1","1:00 to 1:59"="2","2:00 to 2:59"="3",
+#                                           "3:00 to 3:59"="4","4:00 to 4:59"="5","5:00 to 5:59"="6",
+#                                           "6:00 to 6:59"="7","7:00 to 7:59"="8","8:00 to 8:59"="9",
+#                                           "9:00 to 9:59"="10","10:00 to 10:59"="11","11:00 to 11:59"="12",
+#                                           "12:00 to 12:59"="13","13:00 to 13:59"="14","14:00 to 14:59"="15",
+#                                           "15:00 to 15:59"="16","16:00 to 16:59"="17","17:00 to 17:59"="18",
+#                                           "18:00 to 18:59"="19","19:00 to 19:59"="20","20:00 to 20:59"="21",
+#                                           "21:00 to 21:59"="22","22:00 to 22:59"="23","23:00 to 23:59"="24"),
+#          hour=as.character(hour),
+#          hour=as.integer(hour)) %>% 
+#   group_by(publish_country) %>% 
+#   distinct(video_id, .keep_all=TRUE) %>% 
+#   mutate(distinct_videos=n()) %>% 
+#   group_by(publish_country, hour) %>% 
+#   summarise(time_frame_total=n(),
+#             distinct_videos=mean(distinct_videos)) %>% 
+#   mutate(time_frame_prop=case_when(publish_country=="CANADA"~time_frame_total/distinct_videos,
+#                                       publish_country=="FRANCE"~time_frame_total/distinct_videos,
+#                                       publish_country=="GB"~time_frame_total/distinct_videos,
+#                                       publish_country=="US"~time_frame_total/distinct_videos))
+# MEAN PUBLISH HOUR:
+# CANADA	14.81067: 15			
+# FRANCE	15.77379		: 16	
+# GB	13.93609: 14	
+# US	14.76669: 15			
+youtube %>% 
   mutate(hour=recode(time_frame, "0:00 to 0:59"="1","1:00 to 1:59"="2","2:00 to 2:59"="3",
                                           "3:00 to 3:59"="4","4:00 to 4:59"="5","5:00 to 5:59"="6",
                                           "6:00 to 6:59"="7","7:00 to 7:59"="8","8:00 to 8:59"="9",
@@ -107,25 +133,73 @@ youtube_time<-youtube %>%
                                           "21:00 to 21:59"="22","22:00 to 22:59"="23","23:00 to 23:59"="24"),
          hour=as.character(hour),
          hour=as.integer(hour)) %>% 
-  group_by(publish_country) %>% 
-  distinct(video_id, .keep_all=TRUE) %>% 
-  mutate(distinct_videos=n()) %>% 
-  group_by(publish_country, hour) %>% 
-  summarise(time_frame_total=n(),
-            distinct_videos=mean(distinct_videos)) %>% 
-  mutate(time_frame_prop=case_when(publish_country=="CANADA"~time_frame_total/distinct_videos,
-                                      publish_country=="FRANCE"~time_frame_total/distinct_videos,
-                                      publish_country=="GB"~time_frame_total/distinct_videos,
-                                      publish_country=="US"~time_frame_total/distinct_videos))
+  group_by(publish_country) %>% summarise(mean_hour=mean(hour, na.rm=TRUE))
 
-# Distribution of Publish Time by Country
-ggplot(youtube_time, aes(x=hour, fill=publish_country))+
-  scale_fill_discrete(name="Publish Country")+
-  geom_bar(aes(weight=time_frame_prop), show.legend = FALSE)+
-  facet_grid(publish_country~.)+
- labs(x="Hour", y="Proportion of Total Distinct Videos \nPublished By Country", title="Distribution of Times \nWhen Trending Videos are Published")
+
+# boxplot
+youtube %>% 
+  mutate(hour=recode(time_frame, "0:00 to 0:59"="1","1:00 to 1:59"="2","2:00 to 2:59"="3",
+                                          "3:00 to 3:59"="4","4:00 to 4:59"="5","5:00 to 5:59"="6",
+                                          "6:00 to 6:59"="7","7:00 to 7:59"="8","8:00 to 8:59"="9",
+                                          "9:00 to 9:59"="10","10:00 to 10:59"="11","11:00 to 11:59"="12",
+                                          "12:00 to 12:59"="13","13:00 to 13:59"="14","14:00 to 14:59"="15",
+                                          "15:00 to 15:59"="16","16:00 to 16:59"="17","17:00 to 17:59"="18",
+                                          "18:00 to 18:59"="19","19:00 to 19:59"="20","20:00 to 20:59"="21",
+                                          "21:00 to 21:59"="22","22:00 to 22:59"="23","23:00 to 23:59"="24"),
+         hour=as.character(hour),
+         hour=as.integer(hour)) %>%
+  ggplot(aes(x=publish_country, y=hour))+ 
+  geom_boxplot(aes(fill=publish_country), show.legend=FALSE)+
+  scale_y_continuous(breaks=seq(0,24,2))+
+  scale_x_discrete(limits=c("US", "GB", "FRANCE", "CANADA"))+
+  coord_flip()+
+  labs(title="Trending Videos Publishing Hour \nby Country", x="Publish Country", y="Hour")
+?ylim
+# # Distribution of Publish Time by Country
+# ggplot(youtube_time, aes(x=hour, fill=publish_country))+
+#   scale_fill_discrete(name="Publish Country")+
+#   geom_bar(aes(weight=time_frame_prop), show.legend = FALSE)+
+#   facet_grid(publish_country~.)+
+#  labs(x="Hour", y="Proportion of Total Distinct Videos \nPublished By Country", title="Distribution of Times \nWhen Trending Videos are Published")
   
 ```
+
+```{r}
+youtube %>% 
+  mutate(hour=recode(time_frame, "0:00 to 0:59"="1","1:00 to 1:59"="2","2:00 to 2:59"="3",
+                                          "3:00 to 3:59"="4","4:00 to 4:59"="5","5:00 to 5:59"="6",
+                                          "6:00 to 6:59"="7","7:00 to 7:59"="8","8:00 to 8:59"="9",
+                                          "9:00 to 9:59"="10","10:00 to 10:59"="11","11:00 to 11:59"="12",
+                                          "12:00 to 12:59"="13","13:00 to 13:59"="14","14:00 to 14:59"="15",
+                                          "15:00 to 15:59"="16","16:00 to 16:59"="17","17:00 to 17:59"="18",
+                                          "18:00 to 18:59"="19","19:00 to 19:59"="20","20:00 to 20:59"="21",
+                                          "21:00 to 21:59"="22","22:00 to 22:59"="23","23:00 to 23:59"="24"),
+         hour=as.character(hour),
+         hour=as.integer(hour)) %>% 
+  ggplot(aes(x=published_day_of_week, y=hour))+ 
+  geom_boxplot(aes(fill=publish_country), show.legend=FALSE)+scale_y_continuous(breaks=seq(0,24,2))+facet_grid(publish_country~.)+coord_flip()+
+  labs(title="Trending Videos Publishing Hour Each Day of Week \nby Country", x="Day of Week", y="Hour")
+
+
+
+youtube %>% 
+  mutate(hour=recode(time_frame, "0:00 to 0:59"="1","1:00 to 1:59"="2","2:00 to 2:59"="3",
+                                          "3:00 to 3:59"="4","4:00 to 4:59"="5","5:00 to 5:59"="6",
+                                          "6:00 to 6:59"="7","7:00 to 7:59"="8","8:00 to 8:59"="9",
+                                          "9:00 to 9:59"="10","10:00 to 10:59"="11","11:00 to 11:59"="12",
+                                          "12:00 to 12:59"="13","13:00 to 13:59"="14","14:00 to 14:59"="15",
+                                          "15:00 to 15:59"="16","16:00 to 16:59"="17","17:00 to 17:59"="18",
+                                          "18:00 to 18:59"="19","19:00 to 19:59"="20","20:00 to 20:59"="21",
+                                          "21:00 to 21:59"="22","22:00 to 22:59"="23","23:00 to 23:59"="24"),
+         hour=as.character(hour),
+         hour=as.integer(hour)) %>% 
+  ggplot(aes(x=published_day_of_week, y=hour))+ 
+  geom_boxplot(aes(fill=published_day_of_week))+scale_y_continuous(breaks=seq(0,24,2))+coord_flip()+
+  labs(title="Trending Videos Publishing Hour Each Day of Week", x="Day of Week", y="Hour")
+  
+```
+
+
 
 # Publishing Time throughout week by country?
 ```{r}
@@ -160,7 +234,8 @@ youtube_trend<-youtube %>%
   summarise(first_trend=min(trending_date)) %>% 
   mutate(days_to_trend=(publish_date %--% first_trend)/ddays(1)) %>% 
   ungroup()
-
+# mean days to trend:7.129273	
+youtube_trend %>% summarise(mean_days_to_trend=mean(days_to_trend))
 
 youtube_trend %>% 
   ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
