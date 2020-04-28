@@ -237,6 +237,14 @@ youtube_trend<-youtube %>%
 # mean days to trend:7.129273	
 youtube_trend %>% summarise(mean_days_to_trend=mean(days_to_trend))
 
+# No Trendline
+youtube_trend %>% 
+  ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+  scale_color_continuous(name ="Days to Trending")+
+  geom_point(aes(alpha=0.4))+
+  labs(title="Days from Published to Trending", x="Publish Date", y="Days to Trending")
+
+#Trendline
 youtube_trend %>% 
   ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
   scale_color_continuous(name ="Days to Trending")+
@@ -260,11 +268,11 @@ youtube_trend %>%
   summarise(n=n())
 # total videos: 56106	
 
-  ggplot(data=youtube_trend, aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+  ggplot(data=youtube_old, aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
   scale_color_continuous(name ="Days to Trending")+
   geom_smooth(data=youtube_old, method = "lm", color="grey20", alpha=0.3, size=0.7, se=FALSE)+
   geom_point(aes(alpha=0.4))+
-  labs(title="Days from Published to Trending", subtitle="Trendline: July 23, 2006 to November 14, 2017",x="Publish Date", y="Days to Trending")
+  labs(title="Days from Published to Trending", subtitle="July 23, 2006 to November 14, 2017",x="Publish Date", y="Days to Trending")
 ```
 
 
@@ -286,6 +294,10 @@ youtube_trend %>%
   scale_color_continuous(name="Days to Trending")+
   geom_point(aes(alpha=0.4))+
   labs(title="Days from Published to Trending",subtitle="from November 14, 2017 to June 14, 2018", x="Publish Date", y="Days to Trending")
+
+youtube_trend %>% 
+  filter(publish_date>="2017-11-14") %>% summarise(mean_days_to_trend=mean(days_to_trend))
+
 ```
 
 
@@ -298,5 +310,15 @@ youtube %>%
 # Average Number of trending videos in each country each day (For Intro)
 ```{r}
 youtube %>% group_by(publish_country, trending_date) %>% summarise(n=n()) %>% group_by(publish_country) %>% summarise(mean_videos=mean(n))
+```
+Publish Date
+2006-07-23	
+2018-06-14
+
+Trending Date
+2017-11-14	
+2018-06-14	
+```{r}
+youtube %>% group_by(trending_date) %>% summarise(n=n()) %>% arrange(trending_date)
 ```
 
