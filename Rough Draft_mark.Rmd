@@ -486,6 +486,17 @@ youtube %>%
 ```{r, echo=FALSE}
 youtube %>% 
   group_by(video_id) %>% 
+  mutate(trend_diff = trending.date - lag(trending.date, order_by = trending.date)) %>% 
+  arrange(desc(trend_diff)) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  filter(trend_diff > 1) %>% 
+  filter(category_id == "Entertainment" | category_id == "Music" |
+           category_id == "People and Blogs" | category_id == "Comedy" |
+           category_id == "News and Politics") %>% 
+  group_by(category_id) %>% 
+  summarise(median_days_return = median(trend_diff))
+youtube %>% 
+  group_by(video_id) %>% 
   mutate(trend_diff = trending_date - lag(trending_date, order_by = trending_date)) %>% 
   select(video_id, trend_diff, trending_date, category_id) %>%
   arrange(desc(trend_diff)) %>% 
@@ -502,6 +513,13 @@ youtube %>%
 ```
 
 ```{r, echo=FALSE}
+youtube %>% 
+  group_by(video_id) %>% 
+  mutate(days_trending = n()) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  filter(days_trending <= 100) %>% 
+  group_by(publish_country) %>% 
+  summarise(median_days_trending = median(days_trending))
 youtube %>% 
   group_by(video_id) %>% 
   mutate(days_trending = n()) %>% 
