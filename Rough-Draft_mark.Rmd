@@ -489,6 +489,9 @@ youtube %>%
 There is a music video that was published in the US with nearly 600,000 comments and 4,000,000 views. This video was removed to make the graph above more interpretable. The more likes a video has in the category of music, the more comments there are. The trend is similar in each of the four countries. The lines are positively sloped and pretty linear. Higher number of likes is associated with a higher number of comments. There are very few outliers that stray from the highly linear pattern.
 
 ```{r, echo=FALSE, warning=FALSE}
+# make trending date a date
+youtube <- youtube %>% 
+  mutate(trending.date = ydm(trending_date)) 
 youtube %>% 
   group_by(video_id) %>% 
   mutate(trend_diff = trending.date - lag(trending.date, order_by = trending.date)) %>% 
