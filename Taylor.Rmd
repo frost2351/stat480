@@ -1,7 +1,7 @@
 ---
-title: "Taylor"
+title: "480 Project Graphs"
 author: "Taylor Buske"
-date: "4/22/2020"
+date: "4/21/2020"
 output: html_document
 ---
 
@@ -9,22 +9,315 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+Loading the libraries
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r include = FALSE}
+library(knitr)
+library(rmarkdown)
+library(ggplot2)
+library(forcats)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+# install.packages("extrafont")
+library(extrafont)
+# font_import()
+library(DT)
+library(htmltools)
+library(reactable)
 ```
 
-## Including Plots
+Setting the theme
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r include = FALSE}
+my_theme <- function (base_size = 12, base_family = "Times New Roman") {
+  theme_gray() +
+    theme(
+      rect = element_rect(fill = NA, linetype = 0, colour = NA, size = base_size/22),
+      text = element_text(family = base_family, face = "plain", color = "black", size = base_size, hjust = 0.5, vjust = 0.5, angle = 0, lineheight = 0.9, margin = margin(), debug = FALSE),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      plot.caption = element_text(color = "grey50"),
+      legend.position = "right",
+      panel.grid.minor.y = element_line(colour = "grey80"), 
+      panel.grid.major.x = element_line(colour = "grey80", size = rel(0.25)),
+      panel.grid.minor = element_line(size = rel(0.25), colour = "grey80", linetype = "dotted"),
+      panel.grid.major.y = element_line(colour = "grey80", size = rel(0.3)),
+      plot.title = element_text(face = "bold", size = base_size * 1.5)
+    )
+}
+theme_set(my_theme())
+my_pal <- c("#16A08CFF", "plum3", "gold", "#EE0011FF", "#149BEDFF", "lightpink", "lightsalmon", "#A1C720FF", "#FA6B09FF")
+scale_colour_discrete <- function(...) {scale_colour_manual(..., values = my_pal)}
+scale_fill_discrete <- function(...) {scale_fill_manual(..., values = my_pal)}
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Loading the data
+
+```{r}
+youtube <- readxl::read_xlsx("/Users/taylorbuske/Documents/Year\ 3/Semester\ 2/Stat\ 480/youtube.xlsx")
+# head(youtube)
+# str(youtube)
+```
+
+Data Cleaning
+```{r include = FALSE}
+# fix levels of category_id
+youtube$category_id <- as.factor(youtube$category_id)
+levels(youtube$category_id)
+youtube$category_id <- recode(youtube$category_id, "1"="Film & Animation", "2"="Autos & Vehicles", 
+                              "10"="Music", "15"="Pets and Animals", "17"="Sports", "19"="Travel & Events", 
+                              "20"="Gaming", "22"="People and Blogs", "23"="Comedy", "24"="Entertainment", 
+                              "25"="News and Politics", "26"="Howto & Style", "27"="Education", 
+                              "28"="Science & Technology", "29"="Nonprofits & Activism", "30"="Movies", 
+                              "43"="Shows", "44"="Trailers")
+levels(youtube$category_id)
+
+# fix levels of time_frame
+youtube$time_frame<-factor(youtube$time_frame,levels=c("0:00 to 0:59","1:00 to 1:59","2:00 to 2:59",
+                                                       "3:00 to 3:59","4:00 to 4:59","5:00 to 5:59",
+                                                       "6:00 to 6:59","7:00 to 7:59","8:00 to 8:59",
+                                                       "9:00 to 9:59","10:00 to 10:59","11:00 to 11:59",
+                                                       "12:00 to 12:59","13:00 to 13:59","14:00 to 14:59",
+                                                       "15:00 to 15:59","16:00 to 16:59","17:00 to 17:59",
+                                                       "18:00 to 18:59","19:00 to 19:59","20:00 to 20:59",
+                                                       "21:00 to 21:59","22:00 to 22:59","23:00 to 23:59"))
+levels(youtube$time_frame)
+
+# make levels for time of day
+youtube$time_frame1 <- fct_collapse(youtube$time_frame, morning = c("4:00 to 4:59","5:00 to 5:59",
+                                                                    "6:00 to 6:59","7:00 to 7:59",
+                                                                    "8:00 to 8:59","9:00 to 9:59",
+                                                                    "10:00 to 10:59","11:00 to 11:59"), 
+                                    afternoon = c("12:00 to 12:59","13:00 to 13:59","14:00 to 14:59",
+                                                  "15:00 to 15:59","16:00 to 16:59", "17:00 to 17:59",
+                                                  "18:00 to 18:59","19:00 to 19:59"), 
+                                    night = c("20:00 to 20:59","21:00 to 21:59","22:00 to 22:59",
+                                              "23:00 to 23:59", "0:00 to 0:59","1:00 to 1:59",
+                                              "2:00 to 2:59","3:00 to 3:59"))
+levels(youtube$time_frame1)
+youtube$time_frame1 <- factor(youtube$time_frame1, levels = c("morning", "afternoon", "night"))
+
+# fix levels of published_day_of_week
+youtube$published_day_of_week<-factor(youtube$published_day_of_week, 
+                                      levels=c("Monday", "Tuesday", "Wednesday", "Thursday",
+                                               "Friday", "Saturday", "Sunday"))
+levels(youtube$published_day_of_week)
+
+# make levels for weekday weekend
+youtube$published_day_of_week1 <- fct_collapse(youtube$published_day_of_week, 
+                                               weekday = c("Monday", "Tuesday", "Wednesday", "Thursday"),
+                                               weekend = c("Friday", "Saturday", "Sunday"))
+levels(youtube$published_day_of_week1)
+
+# make trending date a date
+youtube <- youtube %>% 
+  mutate(trending.date = ydm(trending_date)) 
+```
+
+Graphs
+
+```{r, fig.width=8, fig.height=5, echo = FALSE}
+# youtube %>% 
+#   distinct(video_id, .keep_all = TRUE) %>% 
+#   filter(category_id == "Music") %>% 
+#   ggplot(aes(x=likes, y=dislikes)) + 
+#   geom_point(aes(color = publish_country, alpha=0), show.legend = FALSE) + 
+#   facet_wrap(~publish_country) + xlab("Likes") + ylab("Dislikes") + 
+#   ggtitle("Likes vs. Dislikes in Publish Countries for \nCategory ID: Music") + 
+#   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+#   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) 
+
+youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  ggplot(aes(x=views, y=likes)) + geom_point(aes(color = publish_country, alpha=0), 
+                                             show.legend = FALSE) + 
+  facet_wrap(~publish_country, scales = "free_y") + xlab("Views") + ylab("Likes") + 
+  ggtitle("Views vs. Likes in Publish Countries") + 
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+  scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) 
+
+# youtube %>% 
+#   distinct(video_id, .keep_all = TRUE) %>% 
+#   ggplot(aes(x=views, y=dislikes)) + geom_point(aes(color = publish_country, alpha=0), 
+#                                                 show.legend = FALSE) + 
+#   facet_wrap(~publish_country) + xlab("Views") + ylab("Dislikes") + 
+#   ggtitle("Views vs. Dislikes in Publish Countries") + 
+#   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+#   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma)
+
+youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  filter(category_id == "Music") %>% 
+  filter(dislikes < 200000) %>% 
+  ggplot(aes(x=views, y=dislikes)) + geom_point(aes(color = publish_country, alpha=0),
+                                                show.legend = FALSE) + 
+  facet_wrap(~publish_country) + xlab("Views") + ylab("Dislikes") + 
+  ggtitle("Views vs. Dislikes in Publish Countries for \nCategory ID: Music") +
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+  scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
+  geom_smooth(method = "lm", color="grey20", se=FALSE)
+# 
+# youtube %>% 
+#   distinct(video_id, .keep_all = TRUE) %>% 
+#   ggplot(aes(x=views, y=comment_count)) + geom_point(aes(color = publish_country, alpha=0), 
+#                                                      show.legend = FALSE) + 
+#   facet_wrap(~publish_country) + xlab("Views") + ylab("Comment Count") + 
+#   ggtitle("Views vs. Comment Count in Publish Countries") + 
+#   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+#   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma)
+
+youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  filter(category_id == "Music") %>% 
+  filter(comment_count < 600000) %>% 
+  ggplot(aes(x=likes, y=comment_count)) + geom_point(aes(color = publish_country, alpha=0), 
+                                                     show.legend = FALSE) +
+  facet_wrap(~publish_country) + xlab("Likes") + ylab("Comment Count") + 
+  ggtitle("Likes vs. Comment Count in Publish Countries for \nCategory ID: Music") + 
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+  scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
+  geom_smooth(method = "lm", color="grey20", se=FALSE)
+
+# youtube %>% 
+#   distinct(video_id, .keep_all = TRUE) %>% 
+#   filter(category_id == "People and Blogs") %>%
+#   ggplot(aes(x=likes, y=comment_count)) + geom_point(aes(color = publish_country, alpha=0), 
+#                                                      show.legend = FALSE) + 
+#   facet_wrap(~publish_country) + xlab("Likes") + ylab("Comment Count") + 
+#   ggtitle("Likes vs. Comment Count in Publish Countries for \nCategory ID: People & Blogs") +
+#   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+#   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
+#   geom_smooth(method = "lm", color="grey20", se = FALSE)
+
+youtube %>% 
+  group_by(video_id) %>% 
+  mutate(trend_diff = trending.date - lag(trending.date, order_by = trending.date)) %>% 
+  # select(trend_diff, trending.date, video_id) %>% 
+  arrange(desc(trend_diff)) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  filter(trend_diff > 1) %>% 
+  filter(category_id == "Entertainment" | category_id == "Music" |
+           category_id == "People and Blogs" | category_id == "Comedy" |
+           category_id == "News and Politics") %>% 
+  ggplot(aes(x=reorder(category_id, trend_diff, FUN=median), y=trend_diff)) + 
+  geom_boxplot(aes(fill=category_id), show.legend=FALSE) +
+  coord_flip() + xlab("Category ID") + ylab("Time Between Trending Dates") + 
+  ggtitle("Days Before Videos Return to \nTrending in each Category") + 
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) 
+
+youtube %>% 
+  group_by(video_id) %>% 
+  mutate(days_trending = n()) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  # select(video_id, days_trending) %>% 
+  filter(days_trending <= 100) %>% 
+  ggplot(aes(x=days_trending)) + geom_bar(aes(y=..prop..,fill=publish_country), position="dodge", show.legend = FALSE) +
+  facet_wrap(~publish_country, scales="free") + xlab("Number of Days Trending") + 
+  ylab("Proportion of Videos") + 
+  ggtitle("Number of Days Videos Are \nTrending in Publish Countries") + 
+  theme(text = element_text(family = "Times New Roman", color = "grey20"))
+
+#This only says those who trend for 2 weeks or less
+  youtube %>% 
+  group_by(video_id) %>% 
+  mutate(days_trending = n()) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  # select(video_id, days_trending) %>% 
+  filter(days_trending <= 14) %>% 
+    filter(category_id == "Entertainment" | category_id == "Music" |
+             category_id == "People and Blogs" | category_id == "Comedy" |
+             category_id == "News and Politics") %>% 
+  ggplot(aes(x=days_trending)) + geom_bar(aes(y=..prop..,fill=category_id), position="dodge", 
+                                          show.legend = FALSE) +
+    facet_wrap(~category_id) +
+  xlab("Number of Days Trending") + 
+  ylab("Proportion of Videos") + 
+  ggtitle("Number of Days Videos Are Trending in \nTop 5 Categories") + 
+  theme(text = element_text(family = "Times New Roman", color = "grey20"))
+```
+
+Tables
+
+```{r}
+youtube_table <- youtube %>% 
+  group_by(publish_country) %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  mutate(num_videos = n()) %>% 
+  group_by(publish_country) %>% 
+  filter(category_id == "Entertainment" | category_id == "Music" |
+           category_id == "People and Blogs" | category_id == "Comedy" |
+           category_id == "News and Politics") %>% 
+  summarise(num_music = sum(ifelse(category_id=="Music", 1, 0)), 
+            num_entertainment = sum(ifelse(category_id=="Entertainment", 1, 0)), 
+            num_peopleblogs = sum(ifelse(category_id=="People and Blogs", 1, 0)),
+            num_comedy = sum(ifelse(category_id=="Comedy", 1, 0)),
+            num_newspolitics = sum(ifelse(category_id=="News and Politics", 1, 0)),
+            mean_views = round(mean(views)),
+            mean_likes = round(mean(likes)),
+            mean_dislikes = round(mean(dislikes)),
+            mean_comments = round(mean(comment_count)))
+
+reactable(youtube_table, bordered = TRUE, striped = TRUE, columns = list(
+  publish_country = colDef(name = "Publish Country"),
+  num_music = colDef(name = "Number of Music Videos"),
+  num_entertainment = colDef(name = "Number of Entertainment Videos"),
+  num_peopleblogs = colDef(name = "Number of People & Blogs Videos"),
+  num_comedy = colDef(name = "Number of Comedy Videos"),
+  num_newspolitics = colDef(name = "Number of News & Politics Videos"), 
+  mean_likes = colDef(name = "Mean Number of Likes"),
+  mean_dislikes = colDef(name = "Mean Number of Dislikes"),
+  mean_views = colDef(name = "Mean Number of Views"),
+  mean_comments = colDef(name = "Mean Number of Comments")))
+
+youtube_table_cat <- youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  filter(category_id == "Entertainment" | category_id == "Music" |
+           category_id == "People and Blogs" | category_id == "Comedy" |
+           category_id == "News and Politics") %>% 
+  group_by(category_id) %>% 
+  summarise(num_videos = n(), 
+            mean_views = round(mean(views)),
+            mean_likes = round(mean(likes)),
+            mean_dislikes = round(mean(dislikes)),
+            mean_comments = round(mean(comment_count)))
+
+reactable(youtube_table_cat, bordered = TRUE, striped = TRUE, columns = list(
+  category_id = colDef("Category"),
+  num_videos = colDef("Number of Videos"),
+  mean_views = colDef(name = "Mean Number of Views"),
+  mean_comments = colDef(name = "Mean Number of Comments"), 
+  mean_likes = colDef(name = "Mean Number of Likes"),
+  mean_dislikes = colDef(name = "Mean Number of Dislikes")))
+
+
+youtube_table_week <- youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  filter(category_id == "Entertainment" | category_id == "Music" |
+           category_id == "People and Blogs" | category_id == "Comedy" |
+           category_id == "News and Politics") %>% 
+  group_by(published_day_of_week) %>% 
+  summarise(num_music = sum(ifelse(category_id=="Music", 1, 0)), 
+            num_entertainment = sum(ifelse(category_id=="Entertainment", 1, 0)), 
+            num_peopleblogs = sum(ifelse(category_id=="People and Blogs", 1, 0)),
+            num_comedy = sum(ifelse(category_id=="Comedy", 1, 0)),
+            num_newspolitics = sum(ifelse(category_id=="News and Politics", 1, 0)),
+            mean_views = round(mean(views)),
+            mean_likes = round(mean(likes)),
+            mean_dislikes = round(mean(dislikes)),
+            mean_comments = round(mean(comment_count)))
+
+reactable(youtube_table_week, bordered = TRUE, striped = TRUE, columns = list(
+  published_day_of_week = colDef(name = "Published Day of Week"),
+  num_music = colDef(name = "Number of Music Videos"),
+  num_entertainment = colDef(name = "Number of Entertainment Videos"),
+  num_peopleblogs = colDef(name = "Number of People & Blogs Videos"),
+  num_comedy = colDef(name = "Number of Comedy Videos"),
+  num_newspolitics = colDef(name = "Number of News & Politics Videos"),
+  mean_views = colDef(name = "Mean Number of Views"),
+  mean_comments = colDef(name = "Mean Number of Comments"), 
+  mean_likes = colDef(name = "Mean Number of Likes"),
+  mean_dislikes = colDef(name = "Mean Number of Dislikes")))
+
+```
