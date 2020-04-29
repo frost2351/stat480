@@ -55,10 +55,8 @@ scale_fill_discrete <- function(...) {scale_fill_manual(..., values = my_pal)}
 
 Loading the data
 
-```{r}
+```{r, include = FALSE}
 youtube <- readxl::read_xlsx("/Users/taylorbuske/Documents/Year\ 3/Semester\ 2/Stat\ 480/youtube.xlsx")
-# head(youtube)
-# str(youtube)
 ```
 
 Data Cleaning
@@ -113,112 +111,37 @@ levels(youtube$published_day_of_week1)
 
 # make trending date a date
 youtube <- youtube %>% 
-  mutate(trending.date = ydm(trending_date)) 
+  mutate(trending_date = ydm(trending_date)) 
 ```
 
 Graphs
 
-```{r, fig.width=8, fig.height=5, echo = FALSE}
-# youtube %>% 
-#   distinct(video_id, .keep_all = TRUE) %>% 
-#   filter(category_id == "Music") %>% 
-#   ggplot(aes(x=likes, y=dislikes)) + 
-#   geom_point(aes(color = publish_country, alpha=0), show.legend = FALSE) + 
-#   facet_wrap(~publish_country) + xlab("Likes") + ylab("Dislikes") + 
-#   ggtitle("Likes vs. Dislikes in Publish Countries for \nCategory ID: Music") + 
-#   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
-#   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) 
-
-youtube %>% 
-  distinct(video_id, .keep_all = TRUE) %>% 
-  ggplot(aes(x=views, y=likes)) + geom_point(aes(color = publish_country, alpha=0), 
-                                             show.legend = FALSE) + 
-  facet_wrap(~publish_country, scales = "free_y") + xlab("Views") + ylab("Likes") + 
-  ggtitle("Views vs. Likes in Publish Countries") + 
-  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
-  scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) 
-
-# youtube %>% 
-#   distinct(video_id, .keep_all = TRUE) %>% 
-#   ggplot(aes(x=views, y=dislikes)) + geom_point(aes(color = publish_country, alpha=0), 
-#                                                 show.legend = FALSE) + 
-#   facet_wrap(~publish_country) + xlab("Views") + ylab("Dislikes") + 
-#   ggtitle("Views vs. Dislikes in Publish Countries") + 
-#   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
-#   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma)
-
-youtube %>% 
-  distinct(video_id, .keep_all = TRUE) %>% 
-  filter(category_id == "Music") %>% 
-  filter(dislikes < 200000) %>% 
-  ggplot(aes(x=views, y=dislikes)) + geom_point(aes(color = publish_country, alpha=0),
-                                                show.legend = FALSE) + 
-  facet_wrap(~publish_country) + xlab("Views") + ylab("Dislikes") + 
-  ggtitle("Views vs. Dislikes in Publish Countries for \nCategory ID: Music") +
-  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
-  scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
-  geom_smooth(method = "lm", color="grey20", se=FALSE)
-# 
-# youtube %>% 
-#   distinct(video_id, .keep_all = TRUE) %>% 
-#   ggplot(aes(x=views, y=comment_count)) + geom_point(aes(color = publish_country, alpha=0), 
-#                                                      show.legend = FALSE) + 
-#   facet_wrap(~publish_country) + xlab("Views") + ylab("Comment Count") + 
-#   ggtitle("Views vs. Comment Count in Publish Countries") + 
-#   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
-#   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma)
-
-youtube %>% 
-  distinct(video_id, .keep_all = TRUE) %>% 
-  filter(category_id == "Music") %>% 
-  filter(comment_count < 600000) %>% 
-  ggplot(aes(x=likes, y=comment_count)) + geom_point(aes(color = publish_country, alpha=0), 
-                                                     show.legend = FALSE) +
-  facet_wrap(~publish_country) + xlab("Likes") + ylab("Comment Count") + 
-  ggtitle("Likes vs. Comment Count in Publish Countries for \nCategory ID: Music") + 
-  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
-  scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
-  geom_smooth(method = "lm", color="grey20", se=FALSE)
-
-# youtube %>% 
-#   distinct(video_id, .keep_all = TRUE) %>% 
-#   filter(category_id == "People and Blogs") %>%
-#   ggplot(aes(x=likes, y=comment_count)) + geom_point(aes(color = publish_country, alpha=0), 
-#                                                      show.legend = FALSE) + 
-#   facet_wrap(~publish_country) + xlab("Likes") + ylab("Comment Count") + 
-#   ggtitle("Likes vs. Comment Count in Publish Countries for \nCategory ID: People & Blogs") +
-#   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
-#   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
-#   geom_smooth(method = "lm", color="grey20", se = FALSE)
-
-youtube %>% 
-  group_by(video_id) %>% 
-  mutate(trend_diff = trending.date - lag(trending.date, order_by = trending.date)) %>% 
-  # select(trend_diff, trending.date, video_id) %>% 
-  arrange(desc(trend_diff)) %>% 
-  distinct(video_id, .keep_all=TRUE) %>% 
-  filter(trend_diff > 1) %>% 
-  filter(category_id == "Entertainment" | category_id == "Music" |
-           category_id == "People and Blogs" | category_id == "Comedy" |
-           category_id == "News and Politics") %>% 
-  ggplot(aes(x=reorder(category_id, trend_diff, FUN=median), y=trend_diff)) + 
-  geom_boxplot(aes(fill=category_id), show.legend=FALSE) +
-  coord_flip() + xlab("Category ID") + ylab("Time Between Trending Dates") + 
-  ggtitle("Days Before Videos Return to \nTrending in each Category") + 
-  theme(text = element_text(family = "Times New Roman", color = "grey20")) 
-
+```{r, include = F}
 youtube %>% 
   group_by(video_id) %>% 
   mutate(days_trending = n()) %>% 
   distinct(video_id, .keep_all=TRUE) %>% 
-  # select(video_id, days_trending) %>% 
+  filter(days_trending <= 100) %>% 
+  group_by(publish_country) %>% 
+  summarise(median_days_trend = median(days_trending))
+```
+
+```{r, echo=FALSE}
+youtube %>% 
+  group_by(video_id) %>% 
+  mutate(days_trending = n()) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
   filter(days_trending <= 100) %>% 
   ggplot(aes(x=days_trending)) + geom_bar(aes(y=..prop..,fill=publish_country), position="dodge", show.legend = FALSE) +
   facet_wrap(~publish_country, scales="free") + xlab("Number of Days Trending") + 
   ylab("Proportion of Videos") + 
   ggtitle("Number of Days Videos Are \nTrending in Publish Countries") + 
   theme(text = element_text(family = "Times New Roman", color = "grey20"))
+```
 
+The above plot shows the number of days videos are trending in each of the four publish countries using the proportion of videos. This graph is also filtered for the number of days trending as less than 100 because there were some very large outliers that made the graphs very difficult to read. As we can see, in Canada and France it appears that the videos they published trend for shorter periods of time - usually less than a week. In Great Britain and the US, however, the videos published tend to trend for longer. While it appears that the majority of these videos trend for two weeks or less, Great Britain videos can trend up to about 50 days, and US videos can trend up to about 60 days. In every country other than the US, the largest proportion of videos trend for one day. In the US, however, there is a spike of the greatest proportion at about one week. The median number of days videos are trending in Canada and France is 1. In Great Britain it is 10, which we see from the curve not tapering off as quickly. In the US, videos trend for a median of 7 days.
+
+```{r, echo = FALSE}
 #This only says those who trend for 2 weeks or less
   youtube %>% 
   group_by(video_id) %>% 
@@ -238,9 +161,94 @@ youtube %>%
   theme(text = element_text(family = "Times New Roman", color = "grey20"))
 ```
 
-Tables
+Since there were very few videos that were on the trending list for more than two weeks, this graph shows videos that trend for 2 weeks or less. Each of the top 5 categories by number of instances has a peak in number of days trending at 1. The largest proportion of videos in each of these categories trend for one day. Each distribution is heavily right skewed. However, 'People and Blogs', 'Entertainment', and 'News and Politics' have similar distributions. Most of the videos trend for one day, few trend for two days, and fewer trend for three days. There are small proportions of videos that trend for more than three days in these categories. 'Music' and 'Comedy' videos also have similar trends, but slightly larger proportions of these videos trend for longer periods of time. They also still have a spike at one day, but the spike is not as high as in the other three categories. 
 
-```{r}
+```{r, include = F}
+youtube %>% 
+  group_by(video_id) %>% 
+  mutate(trend_diff = trending_date - lag(trending_date, order_by = trending_date)) %>% 
+  arrange(desc(trend_diff)) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  filter(trend_diff > 1) %>% 
+  filter(category_id == "Entertainment" | category_id == "Music" |
+           category_id == "People and Blogs" | category_id == "Comedy" |
+           category_id == "News and Politics") %>% 
+  group_by(category_id) %>% 
+  summarise(median_diff = median(trend_diff))
+```
+
+```{r, echo=FALSE}
+youtube %>% 
+  group_by(video_id) %>% 
+  mutate(trend_diff = trending_date - lag(trending_date, order_by = trending_date)) %>% 
+  arrange(desc(trend_diff)) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  filter(trend_diff > 1) %>% 
+  filter(category_id == "Entertainment" | category_id == "Music" |
+           category_id == "People and Blogs" | category_id == "Comedy" |
+           category_id == "News and Politics") %>% 
+  ggplot(aes(x=reorder(category_id, trend_diff, FUN=median), y=trend_diff)) + 
+  geom_boxplot(aes(fill=category_id), show.legend=FALSE) +
+  coord_flip() + xlab("Category ID") + ylab("Time Between Trending Dates") + 
+  ggtitle("Days Before Videos Return to \nTrending in each Category") + 
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) 
+```
+
+Some videos were on the trending list multiple dates that were not consecutive. This plot does not include consecutive days trending. If a video leaves the trending list, it appears to be likely to come back within only a couple of days. However, there are many outliers as shown on the boxplot. Some videos in the 'Music' category even took about a month to return to the trending list. Videos in the category of 'Music' have the largest spread of time between trending dates. Videos in the category of 'News and Politics' have the smallest spread and least time between trending dates. The top 4 categories on this boxplot have a median number of days before returning to trending of 3 days. In the 'News and Politics' category, the median number of days is 2.
+
+Numerical Relationships
+
+There were many possible relationships to explore, and many were explored. Following are some of the most interesting associations found.
+
+```{r, echo = FALSE, fig.width=8, fig.height=5}
+youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  ggplot(aes(x=views, y=likes)) + geom_point(aes(color = publish_country, alpha=0), 
+                                             show.legend = FALSE) + 
+  facet_wrap(~publish_country, scales = "free_y") + xlab("Views") + ylab("Likes") + 
+  ggtitle("Views vs. Likes in Publish Countries") + 
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+  scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) 
+```
+
+We would predict that the more views a video has the more likes it has, and we see this through the upward trends. There is quite a bit of fanning out in each of these graphs. In Canada and France, the association between views and likes is positive and linear. In Great Britain and the US, the association is still positive, but the association is less upward sloping than the other countries. The amount of likes does not increase as much as the amount of views is rising compared to Canada and France. We can’t be sure that this would not be the same for the other countries, however, because Great Britain and the US have the most videos with the largest number of views. If the other countries had more videos with more views, we may see a similar trend.
+
+```{r, echo = FALSE, fig.width=8, fig.height=5}
+youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  filter(category_id == "Music") %>% 
+  filter(dislikes < 200000) %>% 
+  ggplot(aes(x=views, y=dislikes)) + geom_point(aes(color = publish_country, alpha=0),
+                                                show.legend = FALSE) + 
+  facet_wrap(~publish_country) + xlab("Views") + ylab("Dislikes") + 
+  ggtitle("Views vs. Dislikes in Publish Countries for \nCategory ID: Music") +
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+  scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
+  geom_smooth(method = "lm", color="grey20", se=FALSE, formula = y~x)
+```
+
+We see a positive and fairly linear trend in this figure as the one before, but now only looking at the 'Music' category and dislikes rather than likes. It appears that a video that was published in Great Britain is an outlier with nearly 300,000 dislikes, so it was removed to make the graphs more interpretable. Great Britain has the smallest sloping line - their more viewed videos do not tend to be disliked as much compared to the other three countries. Similarly to the association between views and likes, the trend between views and dislikes is positive. So, the more views a video has, the more dislikes it will have in this category.
+
+```{r, echo = FALSE}
+youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  filter(category_id == "Music") %>% 
+  filter(comment_count < 600000) %>% 
+  ggplot(aes(x=likes, y=comment_count)) + geom_point(aes(color = publish_country, alpha=0), 
+                                                     show.legend = FALSE) +
+  facet_wrap(~publish_country) + xlab("Likes") + ylab("Comment Count") + 
+  ggtitle("Likes vs. Comment Count in Publish Countries for \nCategory ID: Music") + 
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
+  scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
+  geom_smooth(method = "lm", color="grey20", se=FALSE, formula = y~x)
+```
+
+There is a video that was published in the US with nearly 600,000 comments and 4,000,000 views. This video was removed to make the graph more interpretable. The more likes a video has in the category of 'Music', the more comments there are. The trend is similar in each of the four countries. The lines are positively sloped and pretty linear. Higher number of likes is associated with a higher number of comments. There are very few outliers that stray from the highly linear pattern.
+
+
+Tables - Further Findings?
+
+```{r, include = F}
 youtube_table <- youtube %>% 
   group_by(publish_country) %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
@@ -258,7 +266,9 @@ youtube_table <- youtube %>%
             mean_likes = round(mean(likes)),
             mean_dislikes = round(mean(dislikes)),
             mean_comments = round(mean(comment_count)))
+```
 
+```{r, echo=FALSE}
 reactable(youtube_table, bordered = TRUE, striped = TRUE, columns = list(
   publish_country = colDef(name = "Publish Country"),
   num_music = colDef(name = "Number of Music Videos"),
@@ -270,7 +280,11 @@ reactable(youtube_table, bordered = TRUE, striped = TRUE, columns = list(
   mean_dislikes = colDef(name = "Mean Number of Dislikes"),
   mean_views = colDef(name = "Mean Number of Views"),
   mean_comments = colDef(name = "Mean Number of Comments")))
+```
 
+Here we have a summary of some important metrics in the data. France has the largest number of videos in four of the top five most common categories by instances. Canada has the largest number of 'Entertainment' videos. There are also metrics for the mean number of likes, dislikes, comments, and views in each of the four countries. Great Britain leads in mean number of views, likes, dislikes, and comments.
+
+```{r, include = F}
 youtube_table_cat <- youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   filter(category_id == "Entertainment" | category_id == "Music" |
@@ -282,7 +296,9 @@ youtube_table_cat <- youtube %>%
             mean_likes = round(mean(likes)),
             mean_dislikes = round(mean(dislikes)),
             mean_comments = round(mean(comment_count)))
+```
 
+```{r, echo=FALSE}
 reactable(youtube_table_cat, bordered = TRUE, striped = TRUE, columns = list(
   category_id = colDef("Category"),
   num_videos = colDef("Number of Videos"),
@@ -290,8 +306,11 @@ reactable(youtube_table_cat, bordered = TRUE, striped = TRUE, columns = list(
   mean_comments = colDef(name = "Mean Number of Comments"), 
   mean_likes = colDef(name = "Mean Number of Likes"),
   mean_dislikes = colDef(name = "Mean Number of Dislikes")))
+```
 
+Looking at the top five categories by number of instances on the trending list, here we have the number of distinct videos trending in that category, and mean number of views, likes, dislikes, and comments. We see the number of 'Entertainment' videos is the highest and the number of 'Music' videos is the lowest. However, we see that 'Music' videos have the highest mean number of views, likes, dislikes, and comments. 'Music' videos appear to attract a lot of viewers and viewer interactions.
 
+```{r, include = F}
 youtube_table_week <- youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   filter(category_id == "Entertainment" | category_id == "Music" |
@@ -307,7 +326,9 @@ youtube_table_week <- youtube %>%
             mean_likes = round(mean(likes)),
             mean_dislikes = round(mean(dislikes)),
             mean_comments = round(mean(comment_count)))
+```
 
+```{r, echo=FALSE}
 reactable(youtube_table_week, bordered = TRUE, striped = TRUE, columns = list(
   published_day_of_week = colDef(name = "Published Day of Week"),
   num_music = colDef(name = "Number of Music Videos"),
@@ -321,3 +342,5 @@ reactable(youtube_table_week, bordered = TRUE, striped = TRUE, columns = list(
   mean_dislikes = colDef(name = "Mean Number of Dislikes")))
 
 ```
+
+This table shows important metrics for trending videos that were published on each day of the week in the top five categories by number of instances on the trending list. For example, in each of the top 5 categories other than 'News and Politics', the most videos are posted on Fridays. The most trending 'News and Politics' videos are published on Mondays. Also, the largest mean number of views, likes, and comments happen on Fridays, while the largest mean number of dislikes happen on Sundays. 
