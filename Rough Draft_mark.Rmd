@@ -54,7 +54,7 @@ str(youtube)
 youtube %>% group_by(publish_country, trending_date) %>% summarise(n=n()) %>% group_by(publish_country) %>% summarise(mean_videos=mean(n))
 ```
 
-Our YouTube data set has 161,470 records and 17 variables. The variables in this dataset are: "video_id", "trending_date", "title, "channel_title", "category_id"  "publish_date", "time_frame", "published_day_of_week", "publish_country", "tags", "views", "likes", "dislikes", "comment_count", "comments_disabled", "ratings_disabled", and "video_error_or_removed". The variables have various data types that we will be using in our analysis, including character, integer, boolean, and factors. Each row in the data set is a particular trending video on a specific trending date. Additionally, four separate countries are analyzed, the United States, Canada, Great Britain, and France. Each country has its own list of trending videos on each day. The trending videos are taken from November of 2017 to June of 2018. According to Google (the owner of YouTube), the trending list is updated approximately every 15 minutes **(Citation Needed)**. Thus, the number of videos that are trending throughout a day fluctuates. The number of videos on the trending list at any given time is around 200 in each country.
+Our YouTube data set has 161,470 records and 17 variables. The variables in this dataset are: "video_id", "trending_date", "title, "channel_title", "category_id"  "publish_date", "time_frame", "published_day_of_week", "publish_country", "tags", "views", "likes", "dislikes", "comment_count", "comments_disabled", "ratings_disabled", and "video_error_or_removed". The variables have various data types that we will be using in our analysis, including character, integer, boolean, and factors. Each row in the data set is a particular trending video on a specific trending date. Additionally, four separate countries are analyzed, the United States, Canada, Great Britain, and France. Each country has its own list of trending videos on each day. The trending videos are taken from November of 2017 to June of 2018. According to Google (the owner of YouTube), the trending list is updated approximately every 15 minutes **(Citation Needed)**. Thus, the number of videos that are trending throughout a day fluctuates. 
 
 
 ## Questions
@@ -454,9 +454,7 @@ youtube %>%
   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) 
 ```
 
-We would predict that the more views a video has the more likes it has, and we see this through the upward trends. There is quite a bit of fanning out in each of these above graphs. In Canada and France, the association between views and likes is positive and linear. In Great Britain and the US, the association is still positive, but the association is less upward sloping than the other countries. The amount of likes does not increase as much as the amount of views is rising compared to Canada and France. We can’t be sure that this would not be the same for the other countries, however, because Great Britain and the US have the most videos with the largest number of views. If the other countries had more videos with more views, we may see a similar trend.
-
-```{r, echo=FALSE, warning = FALSE}
+```{r, echo=FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   filter(category_id == "Music") %>% 
@@ -470,9 +468,7 @@ youtube %>%
   geom_smooth(method = "lm", color="grey20", se=FALSE)
 ```
 
-We see a positive and fairly linear trend in this figure as the one before, but now only looking at the music category and dislikes rather than likes. It appears that a video that was published in Great Britain is an outlier with nearly 300,000 dislikes, so it was removed to make the graphs more interpretable. Great Britain has the smallest sloping line - their more viewed music videos do not tend to be disliked as much compared to the other three countries. Similarly to the association between views and likes, the trend between views and dislikes is positive. So, the more views a video has, the more dislikes it will have in the music category.
-
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   filter(category_id == "Music") %>% 
@@ -486,9 +482,8 @@ youtube %>%
   geom_smooth(method = "lm", color="grey20", se=FALSE)
 ```
 
-There is a music video that was published in the US with nearly 600,000 comments and 4,000,000 views. This video was removed to make the graph above more interpretable. The more likes a video has in the category of music, the more comments there are. The trend is similar in each of the four countries. The lines are positively sloped and pretty linear. Higher number of likes is associated with a higher number of comments. There are very few outliers that stray from the highly linear pattern.
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE}
 youtube %>% 
   group_by(video_id) %>% 
   mutate(trend_diff = trending.date - lag(trending.date, order_by = trending.date)) %>% 
@@ -502,8 +497,8 @@ youtube %>%
   summarise(median_days_return = median(trend_diff))
 youtube %>% 
   group_by(video_id) %>% 
-  mutate(trend_diff = trending.date - lag(trending.date, order_by = trending.date)) %>% 
-  # select(trend_diff, trending.date, video_id) %>% 
+  mutate(trend_diff = trending_date - lag(trending_date, order_by = trending_date)) %>% 
+  select(video_id, trend_diff, trending_date, category_id) %>%
   arrange(desc(trend_diff)) %>% 
   distinct(video_id, .keep_all=TRUE) %>% 
   filter(trend_diff > 1) %>% 
@@ -516,8 +511,6 @@ youtube %>%
   ggtitle("Days Before Videos Return to \nTrending in each Category") + 
   theme(text = element_text(family = "Times New Roman", color = "grey20")) 
 ```
-
-Some videos were on the trending list multiple dates that were not consecutive. This plot does not include consecutive days trending. If a video leaves the trending list, it appears to be likely to come back within only a couple of days. However, there are quite a few outliers as shown on the boxplot. Some videos in the music category even took about a month to return to the trending list. Videos in the category of music have the largest spread of time between trending dates. Videos in the category of news and politics have the smallest spread and least time between trending dates. The top 4 categories on this boxplot have a median number of days before returning to trending of 3 days. In the News and Politics category, the median number of days is 2.
 
 ```{r, echo=FALSE}
 youtube %>% 
@@ -539,8 +532,6 @@ youtube %>%
   ggtitle("Number of Days Videos Are \nTrending in Publish Countries") + 
   theme(text = element_text(family = "Times New Roman", color = "grey20"))
 ```
-
-The above plot shows the number of days videos are trending in each of the four publish countries using the proportion of videos. This graph is also filtered for the number of days trending as less than 100 because there were some very large outliers that made the graphs very difficult to read. As we can see, in Canada and France it appears that the videos they published trend for shorter periods of time - usually less than a week. In Great Britain and the US, however, the videos published tend to trend for longer. While it appears that the majority of these videos trend for two weeks or less, Great Britain videos can trend up to about 50 days, and US videos can trend up to about 60 days. In every country other than the US, the largest proportion of videos trend for one day. In the US, however, there is a spike of the greatest proportion at about one week. The median number of days videos are trending in Canada and France is 1. In Great Britain it is 10, which we see from the curve not tapering off as quickly. In the US, videos trend for a median of 7 days.
 
 ```{r, echo=FALSE}
 youtube_table <- youtube %>% 
@@ -572,11 +563,7 @@ reactable(youtube_table, bordered = TRUE, striped = TRUE, columns = list(
   mean_dislikes = colDef(name = "Mean Number of Dislikes"),
   mean_views = colDef(name = "Mean Number of Views"),
   mean_comments = colDef(name = "Mean Number of Comments")))
-```
 
-Here we have a summary of some important metrics in the data. France has the largest number of videos in four of the top five most common categories by instances. Canada has the largest number of entertainment videos. There are also metrics for the mean number of likes, dislikes, comments, and views in each of the four countries.
-
-```{r}
 youtube_table_cat <- youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   filter(category_id == "Entertainment" | category_id == "Music" |
@@ -596,11 +583,8 @@ reactable(youtube_table_cat, bordered = TRUE, striped = TRUE, columns = list(
   mean_comments = colDef(name = "Mean Number of Comments"), 
   mean_likes = colDef(name = "Mean Number of Likes"),
   mean_dislikes = colDef(name = "Mean Number of Dislikes")))
-```
 
-Looking at the top five categories in the data, here we have the number of distinct videos trending in that category, and mean number of views, likes, dislikes, and comments. 
 
-```{r}
 youtube_table_week <- youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   filter(category_id == "Entertainment" | category_id == "Music" |
@@ -630,5 +614,3 @@ reactable(youtube_table_week, bordered = TRUE, striped = TRUE, columns = list(
   mean_dislikes = colDef(name = "Mean Number of Dislikes")))
 
 ```
-
-This table shows important metrics for trending videos that were published on each day of the week in the top five categories. The largest mean number of views, likes, and comments happen on Fridays, while the largest mean number of dislikes happen on Sundays.
