@@ -1,30 +1,106 @@
----
-title: "Derek"
-author: "Derek Thada"
-date: "4/22/2020"
-output: html_document
----
+###Channel and Category Analysis
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+Our data consists of 18 different video categories. These categories are broad and range from “Pets and Animals” to “Music” to “News and Politics”. It is important to note that each video can only belong to one category, which is chosen by the uploader, not YouTube. Figure 1 below shows the number of instances each category occurred on the daily trending page over our data’s time period. 
+
+```{r Figure 1, echo=FALSE}
+youtube %>% 
+  group_by(category_id) %>% 
+  mutate(n = n()) %>% 
+  ggplot(aes(x = fct_reorder(category_id, n),
+             fill = category_id)) + 
+  geom_bar(show.legend = FALSE) +
+  labs(x = "Category", 
+       y = "Instances on Trending Page", 
+       title = "Instances on Trending Page in each Category") +
+  coord_flip() 
 ```
 
-## R Markdown
+Thus, we can see that “Entertainment” videos are the most frequent type of videos that appear on the trending list. 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+We can also see how the number of trending videos in each category changed over time as well. Our data consists of trending videos from November of 2017 through June of 2018. Figure 2 below shows the number of trending videos over time in the categories “Entertainment,” “Music,” “People and Blogs,” “Comedy,” and “News and Politics”. These categories are the top five categories from Figure 1, whiched showed the categories with the most instances on the daily trending list.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r Figure 2}
+left_right <- youtube %>% 
+  filter(category_id %in% c("Entertainment", "Music",
+                            "People and Blogs", "Comedy",
+                            "News and Politics")) %>%
+  group_by(category_id, trending_date) %>%
+  tally() %>% 
+  group_by(category_id) %>% 
+  slice(which.min(trending_date), which.max(trending_date))
 
-```{r cars}
-summary(cars)
+youtube %>% 
+  filter(category_id %in% c("Entertainment", "Music",
+                            "People and Blogs", "Comedy",
+                            "News and Politics")) %>%
+  group_by(category_id, trending_date) %>%
+  tally() %>% 
+  ggplot() +
+  geom_line(aes(x = trending_date,
+                y = n,
+                color = fct_reorder(category_id, desc(n)))) +
+  geom_point(data = left_right,
+             aes(x = trending_date,
+                 y = n,
+                 color = category_id)) +
+  geom_line(data = left_right,
+            aes(x = trending_date,
+                y = n,
+                color = category_id),
+            linetype = "dashed",
+            size = 0.40) +
+  labs(x = "Date", 
+       y = "Instances on Trending Page", 
+       title = "Instances on Trending Page in each Category Time Series",
+       color = "Category",
+       caption = "Observing the top five categories") +
+  scale_fill_discrete(name = "Category") 
 ```
 
-## Including Plots
+In analyzing Figure 2, we see that the number of instances of “Entertainment” stays relatively constant over time. Also, we see that the time series for "Entertainment" is the highest on the chart. This makes sense since "Entertainment" was by far the most frequent category to appear on the trending list. Our second most frequent category was "Music". So, we would expect it to be the second highest on the time series chart, which it is. For “Music” videos, we see an increase starting around March and this increase continues into May. I conducted some additional research to explain this increase. According to what I found, many popular artists release new music around the spring because it gives the song time to become popular before summer when people are outside more and playing music. This time frame also gives songs time to become popular before summer tours commence. For the bottom three categories of “People and Blogs,” "Comedy," and “News and Politics,” we see that they all appear to initially stay constant and then collectively decrease as "Music" increases, which makes sense because there are only so many spots on the trending list. So, as one category increases, others would have to decrease. 
 
-You can also embed plots, for example:
+One metric that YouTube uses to determine which videos are trending is the amount of views the video has. Figure 3 below shows the top five categories with the most views on their videos.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r Figure 3}
+youtube %>%
+  group_by(video_id) %>% 
+  slice(which.max(trending_date)) %>% 
+  group_by(category_id) %>%
+  summarise(total_views = sum(views, na.rm = T)) %>%
+  arrange(desc(total_views)) %>%
+  top_n(5) %>%
+  ggplot(aes(x = fct_reorder(category_id, desc(total_views)),
+             fill = category_id)) +
+  geom_bar(aes(weight=total_views),
+           show.legend = FALSE) +
+  labs(x = "Categories", 
+       y = "Total Views", 
+       title = "Top 5 Categories by Views",
+       caption = "Considering the views from the last day trending") +
+  scale_y_continuous(labels = scales::comma)
+```
+In analyzing Figure 3, we see that the top 5 categories are the same as in Figures 1 and 2 except that "Sports" has replaced "News and Politics." We see that “Music” has by far the highest amount of views, with the next highest category being "Entertainment." Earlier we found that the most frequent type of trending video was "Entertainment" so this result seems unintuitive. We would expect to see "Entertainment" with the most views since this category appears the most on the trending list. However, according to YouTube, new music releases are some of the most viewed videos on the site, even though they are not on the trending list as often as Entertainment videos.  In looking at the most viewed videos in YouTube history, 18 out of the top 20 are “Music” videos. Another explanation for why "Music" has more views than "Entertainment" is that we think people are more likely to replay a "Music" video, which would increase its views. It is not uncommon for someone to play a catchy song a few times, but for "Entertainment" videos, once you watch it, you usually do not get much more satisfaction watching it a second time, or at least not right away. So this is just another possible reason for why the "Music" category has more views, even though there are more instances of "Entertainment" videos. 
+
+We can also analyze which categories prompt the most fan interaction. We can measure this by analyzing the amount of comments the videos in each category received. Figure 4 shows the top five categories by the amount of comments on their videos.
+
+```{r Figure 4}
+youtube %>%
+  group_by(video_id) %>% 
+  slice(which.max(trending_date)) %>% 
+  group_by(category_id) %>%
+  summarise(total_comments = sum(comment_count)) %>%
+  arrange(desc(total_comments)) %>%
+  top_n(5) %>%
+  ggplot(aes(x = fct_reorder(category_id, desc(total_comments)),
+             fill = category_id)) +
+  geom_bar(aes(weight = total_comments),
+           show.legend = FALSE) +
+  labs(x = "Total Comments", 
+       y = "Channel", 
+       title = "Top 5 Categories by Comments",
+       caption = "Considering the comments from the last day trending") +
+  scale_y_continuous(labels = scales::comma)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+We can see that the categories in Figure 4 are the same as in Figures 1 and 2, except "Comedy" and "People and Blogs" have switched places. Also in Figure 4, we see that "Entertainment" has now overtaken "Music." This result may also seem unintuitive because we found in Figure 3 that "Music" has the most views. So, the more people watching a video, the more likely, you would think, they would be to leave a comment. However, if we consider the replay scenario mentioned in Figure 3's analysis, then views are likely not always a good indication of if a video will have a lot of comments on it. Also, another explanation for why "Entertainment" has the highest comment count is because these videos may be more reactionary in nature and may even ask viewers to leave a comment, which a song is unlikely to do.
+
