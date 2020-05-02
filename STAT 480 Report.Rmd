@@ -1,0 +1,292 @@
+---
+title: "CHEATING THE YOUTUBE SYSTEM???"
+subtitle: "Trending Youtube Video Analysis (NOT CLICKBAIT!!!)"
+author: "Group 5: Taylor Buske, Kailee Ervin, Derek Thada, and Saiyothin Vongpanya"
+date: "5/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(rmarkdown)
+library(ggplot2)
+library(forcats)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(stringr)
+library(extrafont)
+library(maps)
+library(reactable)
+
+my_theme <- function (base_size = 12, base_family = "Times New Roman") {
+  theme_gray() +
+    theme(
+      rect = element_rect(fill = NA, linetype = 0, colour = NA, size = base_size/22),
+      text = element_text(family = base_family, face = "plain", color = "black", size = base_size, hjust = 0.5, vjust = 0.5, angle = 0, lineheight = 0.9, margin = margin(), debug = FALSE),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      plot.caption = element_text(color = "grey50"),
+      legend.position = "right",
+      panel.grid.minor.y = element_line(colour = "grey80"), 
+      panel.grid.major.x = element_line(colour = "grey80", size = rel(0.25)),
+      panel.grid.minor = element_line(size = rel(0.25), colour = "grey80", linetype = "dotted"),
+      panel.grid.major.y = element_line(colour = "grey80", size = rel(0.3)),
+      plot.title = element_text(face = "bold", size = base_size * 1.5)
+    )
+}
+theme_set(my_theme())
+my_pal <- c("#16A08CFF", "plum3", "gold", "#EE0011FF", "#149BEDFF", "lightpink", "lightsalmon", "#A1C720FF", "#FA6B09FF", "paleturquoise", "seagreen", "palevioletred4", "lightpink", "navajowhite2", "lightblue3", "deepskyblue", "coral", "aquamarine")
+scale_colour_discrete <- function(...) {scale_colour_manual(..., values = my_pal)}
+scale_fill_discrete <- function(...) {scale_fill_manual(..., values = my_pal)}
+```
+
+# Introduction
+## About our data:
+```{r}
+youtube <- read_csv("https://raw.githubusercontent.com/frost2351/stat480/master/youtube.csv")
+```
+
+We used trending YouTube data found on Data World that had all trending videos from November 14, 2017, to June 14, 2018, in each of the four countries: Canada, France, Great Britain and the United States.
+
+Our data had 161,470 records and the 17 variables: `video_id`, `trending_date`, `title`, `channel_title`, `category_id`, `publish_date`, `time_frame`, `published_day_of_week`, `publish_country`, `tags`, `views`, `likes`, `dislikes`, `comment_count`, `comments_disabled`, `ratings_disabled`, and `video_error_or_removed`.
+
+For our analysis we initially did some data cleaning, inlcuding changing some variable data types (`trending_date` from factor to date type variable), reordering certain factors in more meaningful orders (`published_day_of_week` to start on Monday and end on Sunday), and recoded `category_id` to be the actual category titles. 
+```{r, echo= FALSE}
+youtube <- youtube %>% 
+  mutate(video_id = as.character(video_id),
+         trending_date = ydm(as.character(trending_date)),
+         title = as.character(title),
+         channel_title = as.character(channel_title),
+         category_id = recode(as.factor(category_id), "1"="Film & Animation", "2"="Autos & Vehicles",
+                              "10"="Music", "15"="Pets and Animals", "17"="Sports", 
+                              "19"="Travel &Events", "20"="Gaming", "22"="People and Blogs", 
+                              "23"="Comedy", "24"="Entertainment", 
+                              "25"="News and Politics", "26"="Howto & Style", "27"="Education",
+                              "28"="Science & Technology", "29"="Nonprofits & Activism", "30"="Movies",
+                              "43"="Shows", "44"="Trailers"),
+         publish_date = dmy(as.character(publish_date)),
+         time_frame=factor(time_frame, levels=c("0:00 to 0:59","1:00 to 1:59","2:00 to 2:59","3:00 to 3:59",
+                                                "4:00 to 4:59","5:00 to 5:59","6:00 to 6:59","7:00 to 7:59",
+                                                "8:00 to 8:59","9:00 to 9:59","10:00 to 10:59","11:00 to 11:59",
+                                                "12:00 to 12:59","13:00 to 13:59","14:00 to 14:59",
+                                                "15:00 to 15:59","16:00 to 16:59","17:00 to 17:59",
+                                                "18:00 to 18:59","19:00 to 19:59","20:00 to 20:59",
+                                                "21:00 to 21:59","22:00 to 22:59","23:00 to 23:59")),
+         time_frame1=fct_collapse(youtube$time_frame, morning = c("4:00 to 4:59","5:00 to 5:59",
+                                                                    "6:00 to 6:59","7:00 to 7:59",
+                                                                    "8:00 to 8:59","9:00 to 9:59",
+                                                                    "10:00 to 10:59","11:00 to 11:59"), 
+                                    afternoon = c("12:00 to 12:59","13:00 to 13:59","14:00 to 14:59",
+                                                  "15:00 to 15:59","16:00 to 16:59", "17:00 to 17:59",
+                                                  "18:00 to 18:59","19:00 to 19:59"), 
+                                    night = c("20:00 to 20:59","21:00 to 21:59","22:00 to 22:59",
+                                              "23:00 to 23:59", "0:00 to 0:59","1:00 to 1:59",
+                                              "2:00 to 2:59","3:00 to 3:59")),
+         published_day_of_week=factor(published_day_of_week, levels=c("Monday", "Tuesday", "Wednesday",
+                                                                      "Thursday", "Friday", "Saturday",
+                                                                      "Sunday")),
+         published_day_of_week1=fct_collapse(youtube$published_day_of_week, 
+                                               weekday = c("Monday", "Tuesday", "Wednesday", "Thursday"),
+                                               weekend = c("Friday", "Saturday", "Sunday")),
+         tags = as.character(tags))
+
+
+```
+
+## About YouTube's Trending Video List
+According to YouTube’s own help page, there are various factors on how a video becomes trending, including:
+
+* Videos must not be misleading, clickbaity, or sensational.
+* Most relevant of users and reflective of broad content on platform
+* Shows diversity of creators
+
+However, these don’t explicitly explain how YouTube’s algorithm works, so we decided to investigate:
+
+**What are the characteristics that make a trending YouTube video?**
+
+In order to investigate this topic, we looked into four areas:
+* Dates and Times
+* Video Titles
+* Video Categories
+* Duration and Metrics
+
+# Dates and Times
+## About `trending_date`
+
+Each row in our data corresponds to a video on a specific trending date. Therefore, if a video appears multiple times in our dataset, it has been trending for multiple days. 
+
+```{r}
+youtube %>% 
+  group_by(publish_country) %>% 
+  mutate(total_video=n()) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  summarise(`Distinct Videos`=n(),
+            `Total Obs`=mean(total_video)) %>% 
+  pivot_longer(cols=`Distinct Videos`:`Total Obs`,
+               names_to="total_type",
+               values_to="number_videos") %>% 
+  ggplot(aes(x=total_type, fill=publish_country))+
+  scale_fill_discrete(name="Publish Country")+
+  geom_bar(aes(weight=number_videos), show.legend = FALSE)+
+  facet_wrap(~publish_country)+
+  labs(title="Total Number of Videos \nvs. \nTotal Distinct Videos By Country", y="Number of Videos", x="Type of Total", caption= "Figure 1: Distinct Videos by Country")
+```
+
+In Figure 1, I compare the total number of observations of trending videos in each country to their number of distinct videos. As you can see, the total observations for each country are relatively equal but, number of distinct videos is drastically different. For Canada and France, there are more distinct videos compared to Great Britain and the United States. Therefore, while Canada and France have more distinct videos, their videos are not on the trending list for very long. In comparison, Great Britain and the US have less distinct videos that are on the trending list a lot longer. For comparison purposes, I will be using proportions of total distinct videos in each country.
+
+## What are the popular hours to publish?
+
+```{r}
+youtube %>% 
+  mutate(hour=recode(time_frame, "0:00 to 0:59"="1","1:00 to 1:59"="2","2:00 to 2:59"="3",
+                                          "3:00 to 3:59"="4","4:00 to 4:59"="5","5:00 to 5:59"="6",
+                                          "6:00 to 6:59"="7","7:00 to 7:59"="8","8:00 to 8:59"="9",
+                                          "9:00 to 9:59"="10","10:00 to 10:59"="11","11:00 to 11:59"="12",
+                                          "12:00 to 12:59"="13","13:00 to 13:59"="14","14:00 to 14:59"="15",
+                                          "15:00 to 15:59"="16","16:00 to 16:59"="17","17:00 to 17:59"="18",
+                                          "18:00 to 18:59"="19","19:00 to 19:59"="20","20:00 to 20:59"="21",
+                                          "21:00 to 21:59"="22","22:00 to 22:59"="23","23:00 to 23:59"="24"),
+         hour=as.character(hour),
+         hour=as.integer(hour)) %>%
+  ggplot(aes(x=publish_country, y=hour))+ 
+  geom_boxplot(aes(fill=publish_country), show.legend=FALSE)+
+  scale_y_continuous(breaks=seq(0,24,2))+
+  scale_x_discrete(limits=c("US", "GB", "FRANCE", "CANADA"))+
+  coord_flip()+
+  labs(title="Trending Videos Publishing Hour \nby Country", x="Publish Country", y="Hour", caption="Figure 2: Popular Publishing Hours")
+```
+
+The variable time_frame is the hour that a video is published. This variable takes into account time zones, so the corresponding time_frame is based on the local time of wherever the video was published.
+
+For easier visualization purposes, We created a new variable called hour that refers to the hour of day the video was published, starting at hour 0 that refers to the time between 12 and 12:59 am.
+
+You can see in Figure 2 that there are no videos published in Hour 0 for any of the countries. Most YouTube creators have set times and days to publish their videos, so it is interesting that none of them release videos exactly at midnight. Looking at the distributions of the boxplots, all countries seem to prefer publishing later in the day as the boxplots are all slightly left skewed. 
+
+Canada and France have the same median publishing hour at around 5pm. However, France is the only country with outliers at hours 1, 2, and 3. Great Britain and the United States also seem to be similar as they have the same median publishing hour at around 4pm. 
+
+## What are the popular days of the week to publish?
+
+```{r}
+youtube %>% 
+  group_by(publish_country) %>% 
+  distinct(video_id, .keep_all=TRUE) %>% 
+  mutate(distinct_videos=n()) %>% 
+  group_by(publish_country, published_day_of_week) %>% 
+  summarise(time_frame_total=n(),
+            distinct_videos=mean(distinct_videos)) %>% 
+  mutate(time_frame_prop=case_when(publish_country=="CANADA"~time_frame_total/distinct_videos,
+                                      publish_country=="FRANCE"~time_frame_total/distinct_videos,
+                                      publish_country=="GB"~time_frame_total/distinct_videos,
+                                      publish_country=="US"~time_frame_total/distinct_videos)) %>% 
+  ggplot(aes(x=published_day_of_week, fill=publish_country))+
+  scale_fill_discrete(name="Publish Country")+
+  geom_bar(aes(weight=time_frame_prop))+
+  facet_grid(publish_country~.)+
+  labs(x="Day of Week", y="Proportion of Total Distinct Videos Published By Country", title="Days of Week When Trending Videos Published", subtitle="by Country", caption="Figure 3: Popular Days of the Week to Publish")+
+  coord_flip()
+```
+
+Looking at Figure 3, Canada and France don’t seem to have any significant preferences on which day of the week they publish their trending videos. 
+
+However, both Great Britain and the United States seem to prefer publishing more on weekdays and less on weekends. This result could correspond to the preferences of posting later in the day. As people start getting off work or done with school activities around 4 to 5pm YouTube becomes a popular pastime and creators might take advantage of this time in order to increase their rate of views.
+
+## How long does it take to for a video to become trending?
+
+```{r}
+youtube_trend<-youtube %>% 
+  select(video_id, publish_date, trending_date) %>% 
+  group_by(video_id, publish_date) %>% 
+  summarise(first_trend=min(trending_date)) %>% 
+  mutate(days_to_trend=(publish_date %--% first_trend)/ddays(1)) %>% 
+  ungroup()
+
+youtube_trend %>% 
+  ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+  scale_color_continuous(name ="Days to Trending")+
+  geom_point(aes(alpha=0.4))+
+  labs(title="Days from Published to Trending", x="Publish Date", y="Days to Trending", caption="Figure 4: How Long from Published to Trending")
+```
+
+In Figure 4, We looked at how many days it takes for a video to first appear on the trending list from when it was published.
+
+As a reminder, our data includes all trending videos between November 2017 through June 2018. While our trending date period is relatively narrow, the publishing dates are from 2006 to 2018. Therefore, some videos take a long time to become trending. 
+
+```{r}
+youtube_trend %>% summarise(mean_days_to_trend=mean(days_to_trend))
+```
+
+However, on average it takes a week for a video to become trending once published.
+
+We will take a closer look at publishing dates before and during our trending period that starts on November 14, 2017.
+
+### Taking a closer look: July 23, 2006 to November 14, 2017 
+```{r}
+youtube_old<-youtube_trend %>% 
+  filter(publish_date<"2017-11-14")
+
+youtube_old %>% 
+  ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+  scale_color_continuous(name ="Days to Trending")+
+  geom_smooth(method = "lm", color="grey20", alpha=0.3, size=0.7, se=FALSE)+
+  geom_point(aes(alpha=0.4))+
+  labs(title="Days from Published to Trending", subtitle="July 23, 2006 to November 14, 2017",x="Publish Date", y="Days to Trending", caption="Figure 5: Taking a Closer Look Before Trend Period")
+```
+
+When we look at videos that were published before our trending period in Figure 5, we can see a very strong negative linear relationship between when the video was published and how many days it takes for that video to become trending. 
+
+```{r}
+# Videos before Trend
+youtube_trend %>% 
+  filter(publish_date<"2017-11-14") %>% 
+  summarise(videos_before_trend=n())
+
+# Total Videos
+youtube_trend %>% 
+  summarise(total_videos=n())
+```
+
+However, the number of videos published before November 14, 2017 is only 2% of all the videos published in this dataset so it is a relatively small subset.
+
+### Taking a closer look: November 14, 2017 to June 14, 2018
+
+```{r}
+youtube_trend %>% 
+  filter(publish_date>="2017-11-14") %>% 
+  ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+  scale_color_continuous(name="Days to Trending")+
+  geom_point(aes(alpha=0.4))+
+  labs(title="Days from Published to Trending",subtitle="from November 14, 2017 to June 14, 2018", x="Publish Date", y="Days to Trending", caption="Figure 6: Taking a Closer Look During Trending Period")
+```
+
+Looking at Figure 6, most videos in this dataset only take a couple days to become trending as seen with the thick dark blue along the x axis. 
+
+```{r}
+youtube_trend %>% 
+  filter(publish_date>="2017-11-14") %>% summarise(mean_days_to_trend=mean(days_to_trend))
+```
+
+
+If you calculate the mean number of days to trending just within the trending period, you only get 1.3 days which is less than the 7 days average number of days to trending for all videos. That means those videos published before the trending period are influencing our average.
+
+There is also a distinct blank line in the data around April.
+
+```{r}
+youtube %>% 
+  arrange(trending_date) %>% group_by(trending_date) %>% summarise(nbr_trending_videos=n()) %>% filter(trending_date>="2018-04-01", trending_date<="2018-04-30") %>% slice(1:10)
+```
+
+ There are no trending dates from April 8 to April 13, 2018 in this dataset. We’re not sure if this because this dataset is missing data or for another reason such as a shooting at the YouTube headquarters on April 3, 2018. This event might have caused the offices to close temporarily and for the trending list not to have been able to be updated during that time.
+
+# Video Titles
+
+# Video Categories
+
+# Duration and Metrics
+
+# Conclusion
+
+
+

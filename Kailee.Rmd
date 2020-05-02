@@ -267,10 +267,10 @@ youtube_trend %>%
 youtube_trend %>% 
   summarise(n=n())
 # total videos: 56106	
-
-  ggplot(data=youtube_old, aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
+youtube_old %>% 
+  ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
   scale_color_continuous(name ="Days to Trending")+
-  geom_smooth(data=youtube_old, method = "lm", color="grey20", alpha=0.3, size=0.7, se=FALSE)+
+  geom_smooth(method = "lm", color="grey20", alpha=0.3, size=0.7, se=FALSE)+
   geom_point(aes(alpha=0.4))+
   labs(title="Days from Published to Trending", subtitle="July 23, 2006 to November 14, 2017",x="Publish Date", y="Days to Trending")
 ```
