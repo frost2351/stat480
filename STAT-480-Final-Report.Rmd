@@ -280,6 +280,112 @@ youtube %>%
 ### Taking a closer look: November 14, 2017 to June 14, 2018
 
 # Video Titles
+## Do different countries have different title length in their trending videos?
+
+```{r}
+youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  mutate(title_length = str_length(title)) %>% 
+  ggplot(aes(x = title_length, 
+             y = ..ndensity.., 
+             fill = publish_country)) +
+  geom_histogram(binwidth=10,
+                 show.legend = F) +
+  facet_wrap(~publish_country) +
+  labs(x = "Length of Title", 
+       y = "Proportion of Trending Videos", 
+       title = "Length of Titles in Trending Youtube Videos \nin Different Countries",
+       caption = "Calculated with distinct video ID's") 
+```
+
+Looking at figure x, we can pair up the countries that have similar distributions. Canada and France are both right skewed, having a tail towards longer videos, while the Great Britain and the United States are fairly normally distributed. This is important to keep in mind for future analysis when analyzing aspects of the title that rely on characters.
+
+
+## Do different countries have different word length in their titles?
+
+While character length is a useful metric , another important aspect to analyze in their titles is their word length.
+
+```{r}
+youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  mutate(words = str_extract_all(title, "[A-z]{1,}"),
+         wordcount = lengths(words)) %>% 
+  ggplot(aes(x = wordcount, 
+             y = ..ndensity.., 
+             fill = publish_country)) +
+  geom_histogram(binwidth=1,
+                 show.legend = F) +
+  facet_wrap(~publish_country) +
+  labs(x = "Number of Words", 
+       y = "Proportion of Trending Videos", 
+       title = "Number of Words in Titles of Trending Youtube Videos\n in Different Countries",
+       caption = "Calculated with distinct video ID's")
+```
+
+Similar to character length, we can pair up the countries in a similar fashion. The most fascinating aspect of the graphs is the large spikes in the 0 word length in both Canada and France. By filtering for these videos I was able to dive deeper in and see what was causing the seemingly random peak. Turns out a majority of these videos are Russian videos and our data set was not compatible to convert Russian characters. This leads to two discoveries:
+
+* A proportion of Canada's and France's trending videos are Russian videos,
+
+* and this large peak is more than likely responsible for the tails in Canada's and France's character length.
+
+## Do different countries use differing amount of capital letters in their trending videos?
+
+While analyzing this metric, we had to consider the varying character lengths for each country. Instead of just using the shear number of capital letters, we use the proportion of capital letters in the title. We believe this better represents the data we are trying to observe. 
+
+```{r}
+youtube %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  mutate(avg_capitals_per_title_length = str_count(title, "[A-Z]") / str_length(title)) %>% 
+  ggplot(aes(x = avg_capitals_per_title_length, 
+             y = ..ndensity.., 
+             fill = publish_country)) +
+  geom_histogram(binwidth=0.03,
+                 show.legend = F) +
+  facet_wrap(~publish_country) +
+  labs(x = "Proportion of Capital Letters in Title", 
+       y = "Proportion of Trending Videos", 
+       title = "Proportion of Capital Letters in Titles of Trending \nYoutube Videos in Different Countries",
+       caption = "Calculated with distinct video ID's")
+```
+
+Anaylzing the above figure, we can observe that most of the countries have a similar distribution, with the exception of France. While the other countries are similar distributed with a peak around a 20% capital letter proportion, France has a wider peak covering 0-18%. Additionally France is bimodial, repeaking around the 75% proportion mark. Further research lead to no concrete conclusion to why this might occur. 
+
+## Do special characters (! and ?) appear more often in trending videos?
+```{r}
+youtube %>% 
+  mutate(number_exclamation = str_count(title, "\\!")) %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  filter(number_exclamation < 11) %>% 
+  ggplot(aes(x = number_exclamation)) +
+  geom_histogram(binwidth = 1, 
+                 fill = "plum3",
+                 color = "black",
+                 size = 0.1) +
+  xlim(0,10)
+  labs(x = "Number of Capital Letters in Title",
+       y = "Number of Trending Videos",
+       title = "Number of Exclamation Marks (!) in Trending Video Titles",
+       caption = "Calculated with distinct video ID's\n Obeserving titles with fewer than 10 exclamations") +
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) 
+  
+youtube %>% 
+  mutate(number_question = str_count(title, "\\?"),
+         avg_capitals_per_title_length = str_count(title, "[A-Z]") / str_length(title)) %>% 
+  distinct(video_id, .keep_all = TRUE) %>% 
+  ggplot(aes(x = number_question)) +
+  geom_histogram(binwidth = 1, 
+                 fill = "plum3",
+                 color = "black",
+                 size = 0.1) +
+  labs(x = "Number of Question Marks (?) in Title",
+       y = "Number of Trending Videos",
+       title = "Number of Question Marks (?) in Trending Video Titles",
+       caption = "Calculated with distinct video ID's") +
+  theme(text = element_text(family = "Times New Roman", color = "grey20")) 
+```
+
+Looking at the above figures we are quickly able to observe that there is not a significant usage of either character in a title. This quick analysis helps us gather that a trending video does not usually associate itself with clickbaity aspects: such as large amounts of capital letters and special characters such as exclamation marks and question marks.
+
 
 # Video Categories
 
