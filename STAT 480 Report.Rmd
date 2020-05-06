@@ -49,7 +49,7 @@ scale_fill_discrete <- function(...) {scale_fill_manual(..., values = my_pal)}
 youtube <- read_csv("https://raw.githubusercontent.com/frost2351/stat480/master/youtube.csv")
 ```
 
-We used trending YouTube data found on Data World that had all trending videos from November 14, 2017, to June 14, 2018, in each of the four countries: Canada, France, Great Britain and the United States.
+We used trending YouTube data found on Data World that had all trending videos from November 14, 2017, to June 14, 2018, in the four countries of: Canada, France, Great Britain and the United States.
 
 Our data had 161,470 records and the 17 variables: `video_id`, `trending_date`, `title`, `channel_title`, `category_id`, `publish_date`, `time_frame`, `published_day_of_week`, `publish_country`, `tags`, `views`, `likes`, `dislikes`, `comment_count`, `comments_disabled`, `ratings_disabled`, and `video_error_or_removed`.
 
@@ -99,7 +99,7 @@ youtube <- youtube %>%
 ## About YouTube's Trending Video List
 According to YouTube’s own help page, there are various factors on how a video becomes trending, including:
 
-* Videos must not be misleading, clickbaity, or sensational. 
+* Videos must not be misleading, clickbait, or sensational. 
 * Most relevant of users and reflective of broad content on platform 
 * Shows diversity of creators 
 
@@ -740,7 +740,7 @@ This table shows important metrics for trending videos that were published on ea
 
 # Conclusions
 * Entertainment and Music videos appear on the trending list the most
-  + Implies that a trending video is constantly repopulated with similar channels
+  + Implies that these categories are the most popular on the site
 * Most videos take about a week to begin trending 
   + A trending video will become viral quickly from its release
   + Implies that a fanbase helps bolster getting the videos seen quicker
@@ -758,12 +758,15 @@ This table shows important metrics for trending videos that were published on ea
 * Having non-trending video data
   + Allows us to do a much more significant analysis on how to make a trending video
   + Would allow for much stronger comparisons
+* Analyze more countries
+  + YouTube is available all across the globe, not just in the 4 countries we analyze
+  + Global data may allow for more inferences to be made on how a video becomes trending
 * Evaluate a longer time period 
   + Get a more concrete analysis on the changes that happened over time
 * Stronger analysis on titles 
   + No strong conclusions were drawn from the titles
 * Parsing words or phrases to observe trends 
-  + Needs a way to deal with the Russian videos
+  + Need a way to deal with the Russian videos
   + Not enough time to clean the titles to make parsing it usuable
 
 
