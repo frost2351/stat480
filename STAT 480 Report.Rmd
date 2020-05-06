@@ -299,7 +299,7 @@ youtube %>%
   labs(x = "Length of Title", 
        y = "Proportion of Trending Videos", 
        title = "Length of Titles in Trending Youtube Videos \nin Different Countries",
-       caption = "Figure 7: Calculated with distinct video ID's") 
+       caption = "Figure 7: Character Length \nCalculated with distinct video ID's") 
 ```
 
 Looking at figure 7, we can pair up the countries that have similar distributions. Canada and France are both right skewed, having a tail towards longer videos, while the Great Britain and the United States are fairly normally distributed. This is important to keep in mind for future analysis when analyzing aspects of the title that rely on characters.
@@ -323,7 +323,7 @@ youtube %>%
   labs(x = "Number of Words", 
        y = "Proportion of Trending Videos", 
        title = "Number of Words in Titles of Trending Youtube Videos\n in Different Countries",
-       caption = "Figure 8: Calculated with distinct video ID's")
+       caption = "Figure 8: Word Length \nCalculated with distinct video ID's")
 ```
 
 Similar to character length, we can pair up the countries in a similar fashion. The most fascinating aspect of the graphs is the large spikes in the 0 word length in both Canada and France. By filtering for these videos I was able to dive deeper in and see what was causing the seemingly random peak. Turns out a majority of these videos are Russian videos and our data set was not compatible to convert Russian characters. This leads to two discoveries:
@@ -349,7 +349,7 @@ youtube %>%
   labs(x = "Proportion of Capital Letters in Title", 
        y = "Proportion of Trending Videos", 
        title = "Proportion of Capital Letters in Titles of Trending \nYoutube Videos in Different Countries",
-       caption = "Figure 9: Calculated with distinct video ID's")
+       caption = "Figure 9: Proportion of Capital Letters \nCalculated with distinct video ID's")
 ```
 
 Anaylzing the above figure, we can observe that most of the countries have a similar distribution, with the exception of France. While the other countries are similar distributed with a peak around a 20% capital letter proportion, France has a wider peak covering 0-18%. Additionally France is bimodial, repeaking around the 75% proportion mark. Further research lead to no concrete conclusion to why this might occur. 
@@ -410,7 +410,7 @@ youtube %>%
 
 Thus, we can see that “Entertainment” videos are the most frequent type of videos that appear on the trending list. 
 
-We can also see how the number of instances a category has appeared on the trending list has changed over time as well. Our data consists of trending videos from November of 2017 through June of 2018. Figure 13 below shows the number of trending videos over time in the categories “Entertainment,” “Music,” “People and Blogs,” “Comedy,” and “News and Politics”. These categories are the top five categories from Figure 1, whiched showed the categories with the most instances on the daily trending list.
+We can also see how the number of instances a category has appeared on the trending list has changed over time as well. Our data consists of trending videos from November of 2017 through June of 2018. Figure 13 below shows the number of trending videos over time in the categories “Entertainment,” “Music,” “People and Blogs,” “Comedy,” and “News and Politics”. These categories are the top five categories from Figure 12, whiched showed the categories with the most instances on the daily trending list.
 
 ```{r, echo= FALSE}
 left_right <- youtube %>% 
@@ -738,10 +738,14 @@ reactable(youtube_table_week, bordered = TRUE, striped = TRUE, columns = list(
 
 This table shows important metrics for trending videos that were published on each day of the week in the top five categories by number of instances on the trending list. For example, in each of the top 5 categories other than 'News and Politics', the most videos are posted on Fridays. The most trending 'News and Politics' videos are published on Mondays. Also, the largest mean number of views, likes, and comments happen on Fridays, while the largest mean number of dislikes happen on Sundays. 
 
-# Conclusion
-* Entertainment and Music videos appear on the trending list the most 
+# Conclusions
+* Entertainment and Music videos appear on the trending list the most
+  + Implies that a trending video is constantly repopulated with similar channels
 * Most videos take about a week to begin trending 
+  + A trending video will become viral quickly from its release
+  + Implies that a fanbase helps bolster getting the videos seen quicker
 * Videos trend for longer in Great Britain and the US 
+  + Reinforces the idea that similar channels and creators repopulate the trending page
 * A lot of factors may have small influences over a trending video 
   - Publish Country 
   - Category 
@@ -749,10 +753,18 @@ This table shows important metrics for trending videos that were published on ea
 
 # Future Directions
 * Video Tags 
-* Having non-trending video data 
+  + One of the few truly "messy" data in our data set
+  + A lot of different components need to be parsed out to get workable data
+* Having non-trending video data
+  + Allows us to do a much more significant analysis on how to make a trending video
+  + Would allow for much stronger comparisons
 * Evaluate a longer time period 
+  + Get a more concrete analysis on the changes that happened over time
 * Stronger analysis on titles 
+  + No strong conclusions were drawn from the titles
 * Parsing words or phrases to observe trends 
+  + Needs a way to deal with the Russian videos
+  + Not enough time to clean the titles to make parsing it usuable
 
 
 # References
