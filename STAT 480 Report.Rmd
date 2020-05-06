@@ -118,7 +118,7 @@ In order to investigate this topic, we looked into four areas:
 
 Each row in our data corresponds to a video on a specific trending date. Therefore, if a video appears multiple times in our dataset, it has been trending for multiple days. 
 
-```{r}
+```{r, echo= FALSE}
 youtube %>% 
   group_by(publish_country) %>% 
   mutate(total_video=n()) %>% 
@@ -139,7 +139,7 @@ In Figure 1, I compare the total number of observations of trending videos in ea
 
 ## What are the popular hours to publish?
 
-```{r}
+```{r, echo= FALSE}
 youtube %>% 
   mutate(hour=recode(time_frame, "0:00 to 0:59"="1","1:00 to 1:59"="2","2:00 to 2:59"="3",
                                           "3:00 to 3:59"="4","4:00 to 4:59"="5","5:00 to 5:59"="6",
@@ -169,7 +169,7 @@ Canada and France have the same median publishing hour at around 5pm. However, F
 
 ## What are the popular days of the week to publish?
 
-```{r}
+```{r, echo= FALSE}
 youtube %>% 
   group_by(publish_country) %>% 
   distinct(video_id, .keep_all=TRUE) %>% 
@@ -194,7 +194,7 @@ Looking at Figure 3, Canada and France don’t seem to have any significant pref
 However, both Great Britain and the United States seem to prefer publishing more on weekdays and less on weekends. This result could correspond to the preferences of posting later in the day. As people start getting off work or done with school activities around 4 to 5pm YouTube becomes a popular pastime and creators might take advantage of this time in order to increase their rate of views.
 
 ## How long does it take to for a video to become trending?
-```{r}
+```{r, echo= FALSE}
 youtube_trend<-youtube %>% 
   select(video_id, publish_date, trending_date) %>% 
   group_by(video_id, publish_date) %>% 
@@ -203,7 +203,7 @@ youtube_trend<-youtube %>%
   ungroup()
 ```
 
-```{r}
+```{r, echo= FALSE}
 youtube_trend %>% 
   ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
   scale_color_continuous(name ="Days to Trending")+
@@ -215,7 +215,7 @@ In Figure 4, We looked at how many days it takes for a video to first appear on 
 
 As a reminder, our data includes all trending videos between November 2017 through June 2018. While our trending date period is relatively narrow, the publishing dates are from 2006 to 2018. Therefore, some videos take a long time to become trending. 
 
-```{r}
+```{r, echo= FALSE}
 youtube_trend %>% summarise(mean_days_to_trend=mean(days_to_trend))
 ```
 
@@ -224,12 +224,12 @@ However, on average it takes a week for a video to become trending once publishe
 We will take a closer look at publishing dates before and during our trending period that starts on November 14, 2017.
 
 ### Taking a closer look: July 23, 2006 to November 14, 2017 
-```{r}
+```{r, echo= FALSE}
 youtube_old<-youtube_trend %>% 
   filter(publish_date<"2017-11-14")
 ```
 
-```{r}
+```{r, echo= FALSE}
 youtube_old %>% 
   ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
   scale_color_continuous(name ="Days to Trending")+
@@ -240,7 +240,7 @@ youtube_old %>%
 
 When we look at videos that were published before our trending period in Figure 5, we can see a very strong negative linear relationship between when the video was published and how many days it takes for that video to become trending. 
 
-```{r}
+```{r, echo= FALSE}
 # Videos before Trend
 youtube_trend %>% 
   filter(publish_date<"2017-11-14") %>% 
@@ -255,7 +255,7 @@ However, the number of videos published before November 14, 2017 is only 2% of a
 
 ### Taking a closer look: November 14, 2017 to June 14, 2018
 
-```{r}
+```{r, echo= FALSE}
 youtube_trend %>% 
   filter(publish_date>="2017-11-14") %>% 
   ggplot(aes(x=publish_date, y=days_to_trend, color=days_to_trend))+
@@ -266,7 +266,7 @@ youtube_trend %>%
 
 Looking at Figure 6, most videos in this dataset only take a couple days to become trending as seen with the thick dark blue along the x axis. 
 
-```{r}
+```{r, echo= FALSE}
 youtube_trend %>% 
   filter(publish_date>="2017-11-14") %>% summarise(mean_days_to_trend=mean(days_to_trend))
 ```
@@ -276,7 +276,7 @@ If you calculate the mean number of days to trending just within the trending pe
 
 There is also a distinct blank line in the data around April.
 
-```{r}
+```{r, echo= FALSE}
 youtube %>% 
   arrange(trending_date) %>% group_by(trending_date) %>% summarise(nbr_trending_videos=n()) %>% filter(trending_date>="2018-04-01", trending_date<="2018-04-30") %>% slice(1:10)
 ```
@@ -286,7 +286,7 @@ youtube %>%
 # Video Titles
 ## Do different countries have different title length in their trending videos?
 
-```{r}
+```{r, echo= FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   mutate(title_length = str_length(title)) %>% 
@@ -299,17 +299,17 @@ youtube %>%
   labs(x = "Length of Title", 
        y = "Proportion of Trending Videos", 
        title = "Length of Titles in Trending Youtube Videos \nin Different Countries",
-       caption = "Calculated with distinct video ID's") 
+       caption = "Figure 7: Calculated with distinct video ID's") 
 ```
 
-Looking at figure x, we can pair up the countries that have similar distributions. Canada and France are both right skewed, having a tail towards longer videos, while the Great Britain and the United States are fairly normally distributed. This is important to keep in mind for future analysis when analyzing aspects of the title that rely on characters.
+Looking at figure 7, we can pair up the countries that have similar distributions. Canada and France are both right skewed, having a tail towards longer videos, while the Great Britain and the United States are fairly normally distributed. This is important to keep in mind for future analysis when analyzing aspects of the title that rely on characters.
 
 
 ## Do different countries have different word length in their titles?
 
 While character length is a useful metric , another important aspect to analyze in their titles is their word length.
 
-```{r}
+```{r, echo= FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   mutate(words = str_extract_all(title, "[A-z]{1,}"),
@@ -323,7 +323,7 @@ youtube %>%
   labs(x = "Number of Words", 
        y = "Proportion of Trending Videos", 
        title = "Number of Words in Titles of Trending Youtube Videos\n in Different Countries",
-       caption = "Calculated with distinct video ID's")
+       caption = "Figure 8: Calculated with distinct video ID's")
 ```
 
 Similar to character length, we can pair up the countries in a similar fashion. The most fascinating aspect of the graphs is the large spikes in the 0 word length in both Canada and France. By filtering for these videos I was able to dive deeper in and see what was causing the seemingly random peak. Turns out a majority of these videos are Russian videos and our data set was not compatible to convert Russian characters. This leads to two discoveries:
@@ -336,7 +336,7 @@ Similar to character length, we can pair up the countries in a similar fashion. 
 
 While analyzing this metric, we had to consider the varying character lengths for each country. Instead of just using the shear number of capital letters, we use the proportion of capital letters in the title. We believe this better represents the data we are trying to observe. 
 
-```{r}
+```{r, echo= FALSE}
 youtube %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
   mutate(avg_capitals_per_title_length = str_count(title, "[A-Z]") / str_length(title)) %>% 
@@ -349,13 +349,13 @@ youtube %>%
   labs(x = "Proportion of Capital Letters in Title", 
        y = "Proportion of Trending Videos", 
        title = "Proportion of Capital Letters in Titles of Trending \nYoutube Videos in Different Countries",
-       caption = "Calculated with distinct video ID's")
+       caption = "Figure 9: Calculated with distinct video ID's")
 ```
 
 Anaylzing the above figure, we can observe that most of the countries have a similar distribution, with the exception of France. While the other countries are similar distributed with a peak around a 20% capital letter proportion, France has a wider peak covering 0-18%. Additionally France is bimodial, repeaking around the 75% proportion mark. Further research lead to no concrete conclusion to why this might occur. 
 
 ## Do special characters (! and ?) appear more often in trending videos?
-```{r}
+```{r, echo= FALSE}
 youtube %>% 
   mutate(number_exclamation = str_count(title, "\\!")) %>% 
   distinct(video_id, .keep_all = TRUE) %>% 
@@ -369,7 +369,7 @@ youtube %>%
   labs(x = "Number of Capital Letters in Title",
        y = "Number of Trending Videos",
        title = "Number of Exclamation Marks (!) in Trending Video Titles",
-       caption = "Calculated with distinct video ID's\n Obeserving titles with fewer than 10 exclamations") +
+       caption = "Figure 10: Calculated with distinct video ID's\n Obeserving titles with fewer than 10 exclamations") +
   theme(text = element_text(family = "Times New Roman", color = "grey20")) 
   
 youtube %>% 
@@ -384,16 +384,17 @@ youtube %>%
   labs(x = "Number of Question Marks (?) in Title",
        y = "Number of Trending Videos",
        title = "Number of Question Marks (?) in Trending Video Titles",
-       caption = "Calculated with distinct video ID's") +
+       caption = "Figure 11: Calculated with distinct video ID's") +
   theme(text = element_text(family = "Times New Roman", color = "grey20")) 
 ```
 
-Looking at the above figures we are quickly able to observe that there is not a significant usage of either character in a title. This quick analysis helps us gather that a trending video does not usually associate itself with clickbaity aspects: such as large amounts of capital letters and special characters such as exclamation marks and question marks.
+Looking at the above Figures 10 and 11 we are quickly able to observe that there is not a significant usage of either character in a title. This quick analysis helps us gather that a trending video does not usually associate itself with clickbaity aspects: such as large amounts of capital letters and special characters such as exclamation marks and question marks.
 
 # Video Categories
-Our data consists of 18 different video categories. These categories are broad and range from “Pets and Animals” to “Music” to “News and Politics”. It is important to note that each video can only belong to one category, which is chosen by the uploader, not YouTube. Figure 1 below shows the number of instances each category appeared in the daily trending page over our data’s time period. 
 
-```{r}
+Our data consists of 18 different video categories. These categories are broad and range from “Pets and Animals” to “Music” to “News and Politics”. It is important to note that each video can only belong to one category, which is chosen by the uploader, not YouTube. Figure 12 below shows the number of instances each category appeared in the daily trending page over our data’s time period. 
+
+```{r, echo= FALSE}
 youtube %>% 
   group_by(category_id) %>% 
   mutate(n = n()) %>% 
@@ -403,15 +404,15 @@ youtube %>%
   labs(x = "Category", 
        y = "Instances on Trending Page", 
        title = "Instances on Trending Page in each Category",
-       caption="Figure") +
+       caption="Figure 12") +
   coord_flip() 
 ```
 
 Thus, we can see that “Entertainment” videos are the most frequent type of videos that appear on the trending list. 
 
-We can also see how the number of instances a category has appeared on the trending list has changed over time as well. Our data consists of trending videos from November of 2017 through June of 2018. Figure 2 below shows the number of trending videos over time in the categories “Entertainment,” “Music,” “People and Blogs,” “Comedy,” and “News and Politics”. These categories are the top five categories from Figure 1, whiched showed the categories with the most instances on the daily trending list.
+We can also see how the number of instances a category has appeared on the trending list has changed over time as well. Our data consists of trending videos from November of 2017 through June of 2018. Figure 13 below shows the number of trending videos over time in the categories “Entertainment,” “Music,” “People and Blogs,” “Comedy,” and “News and Politics”. These categories are the top five categories from Figure 1, whiched showed the categories with the most instances on the daily trending list.
 
-```{r Figure 2}
+```{r, echo= FALSE}
 left_right <- youtube %>% 
   filter(category_id %in% c("Entertainment", "Music",
                             "People and Blogs", "Comedy",
@@ -445,15 +446,15 @@ youtube %>%
        y = "Instances on Trending Page", 
        title = "Instances on Trending Page in each Category Time Series",
        color = "Category",
-       caption = "Figure: Observing the top five categories") +
+       caption = "Figure 13: Observing the top five categories") +
   scale_fill_discrete(name = "Category") 
 ```
 
-In analyzing Figure 2, we see that the number of instances of “Entertainment” stays relatively constant over time. Also, we see that the time series for "Entertainment" is the highest on the chart. This makes sense since "Entertainment" was by far the most frequent category to appear on the trending list (as seen in Figure 1). Our second most frequent category was "Music". So, we would expect it to be the second highest on the time series chart, which it is. For “Music” videos, we see an increase starting around March and this increase continues into May. I conducted some additional research to explain this increase. According to what I found, many popular artists release new music around the spring because it gives the songs time to become popular before summer when people are outside more and playing music. This time frame also gives songs time to become popular before summer tours commence. For the bottom three categories of “People and Blogs,” "Comedy," and “News and Politics,” we see that they all appear to initially stay constant and then collectively decrease as "Music" increases. This makes sense because there are only so many spots on the trending list. So, as one category increases, others would have to decrease. 
+In analyzing Figure 13, we see that the number of instances of “Entertainment” stays relatively constant over time. Also, we see that the time series for "Entertainment" is the highest on the chart. This makes sense since "Entertainment" was by far the most frequent category to appear on the trending list (as seen in Figure 12). Our second most frequent category was "Music". So, we would expect it to be the second highest on the time series chart, which it is. For “Music” videos, we see an increase starting around March and this increase continues into May. I conducted some additional research to explain this increase. According to what I found, many popular artists release new music around the spring because it gives the songs time to become popular before summer when people are outside more and playing music. This time frame also gives songs time to become popular before summer tours commence. For the bottom three categories of “People and Blogs,” "Comedy," and “News and Politics,” we see that they all appear to initially stay constant and then collectively decrease as "Music" increases. This makes sense because there are only so many spots on the trending list. So, as one category increases, others would have to decrease. 
 
-One metric that YouTube uses to determine which videos are trending is the amount of views the video has. Figure 3 below shows the top five categories with the most views on their videos.
+One metric that YouTube uses to determine which videos are trending is the amount of views the video has. Figure 14 below shows the top five categories with the most views on their videos.
 
-```{r Figure 3}
+```{r, echo= FALSE}
 youtube %>%
   group_by(video_id) %>% 
   slice(which.max(trending_date)) %>% 
@@ -468,14 +469,15 @@ youtube %>%
   labs(x = "Categories", 
        y = "Total Views", 
        title = "Top 5 Categories by Views",
-       caption = "Figure: Considering the views from the last day trending") +
+       caption = "Figure 14: Considering the views from the last day trending") +
   scale_y_continuous(labels = scales::comma)
 ```
-In analyzing Figure 3, we see that the top 5 categories are the same as in Figure 2 except that "Sports" has replaced "News and Politics." We see that “Music” has by far the highest amount of views, with the next highest category being "Entertainment." In Figure 1, we found that the most frequent type of trending video was "Entertainment" so this result seems unintuitive. We would expect to see "Entertainment" with the most views since this category appears the most on the trending list. However, according to YouTube, new music releases are some of the most viewed videos on the site, even though they are not on the trending list as often as "Entertainment" videos.  In looking at the most viewed videos in YouTube history, I found that 18 out of the top 20 are “Music” videos. Another explanation for why "Music" has more views than "Entertainment" is that we think people are more likely to replay a "Music" video, which would increase its views. It is not uncommon for someone to play a catchy song a few times, but for "Entertainment" videos, once you watch it, you usually do not get much more satisfaction watching it a second time, or at least not right away. So, this is just another possible reason for why the "Music" category has more views, even though there are more instances of "Entertainment" videos. 
 
-We can also analyze which categories prompt the most fan interaction. We can measure this by analyzing the amount of comments the videos in each category received. Figure 4 shows the top five categories by the amount of comments on their videos.
+In analyzing Figure 14, we see that the top 5 categories are the same as in Figure 2 except that "Sports" has replaced "News and Politics." We see that “Music” has by far the highest amount of views, with the next highest category being "Entertainment." In Figure 12, we found that the most frequent type of trending video was "Entertainment" so this result seems unintuitive. We would expect to see "Entertainment" with the most views since this category appears the most on the trending list. However, according to YouTube, new music releases are some of the most viewed videos on the site, even though they are not on the trending list as often as "Entertainment" videos.  In looking at the most viewed videos in YouTube history, I found that 18 out of the top 20 are “Music” videos. Another explanation for why "Music" has more views than "Entertainment" is that we think people are more likely to replay a "Music" video, which would increase its views. It is not uncommon for someone to play a catchy song a few times, but for "Entertainment" videos, once you watch it, you usually do not get much more satisfaction watching it a second time, or at least not right away. So, this is just another possible reason for why the "Music" category has more views, even though there are more instances of "Entertainment" videos. 
 
-```{r Figure 4}
+We can also analyze which categories prompt the most fan interaction. We can measure this by analyzing the amount of comments the videos in each category received. Figure 15 shows the top five categories by the amount of comments on their videos.
+
+```{r, echo= FALSE}
 youtube %>%
   group_by(video_id) %>% 
   slice(which.max(trending_date)) %>% 
@@ -490,11 +492,11 @@ youtube %>%
   labs(x = "Total Comments", 
        y = "Channel", 
        title = "Top 5 Categories by Comments",
-       caption = "Figure: Considering the comments from the last day trending") +
+       caption = "Figure 15: Considering the comments from the last day trending") +
   scale_y_continuous(labels = scales::comma)
 ```
 
-We can see that the categories in Figure 4 are the same as in Figure 2, except "Comedy" and "People and Blogs" have switched places. Also in Figure 4, we see that "Entertainment" has now overtaken "Music." This result may seem unintuitive because we found in Figure 3 that "Music" has the most views. So, the more people watching a video, the more likely, you would think, they would be to leave a comment. However, if we consider the replay scenario mentioned in Figure 3's analysis, we believe that a viewer is unlikely to comment each time they replay a video. Also, another explanation for why "Entertainment" has the highest comment count is because these videos may be more reactionary in nature and may even ask viewers to leave a comment, which a song is unlikely to do.
+We can see that the categories in Figure 15 are the same as in Figure 13, except "Comedy" and "People and Blogs" have switched places. Also in Figure 15, we see that "Entertainment" has now overtaken "Music." This result may seem unintuitive because we found in Figure 14 that "Music" has the most views. So, the more people watching a video, the more likely, you would think, they would be to leave a comment. However, if we consider the replay scenario mentioned in Figure 14's analysis, we believe that a viewer is unlikely to comment each time they replay a video. Also, another explanation for why "Entertainment" has the highest comment count is because these videos may be more reactionary in nature and may even ask viewers to leave a comment, which a song is unlikely to do.
 
 # Duration and Metrics
 ```{r, include = F}
@@ -517,10 +519,11 @@ youtube %>%
   facet_wrap(~publish_country, scales="free") + xlab("Number of Days Trending") + 
   ylab("Proportion of Videos") + 
   ggtitle("Number of Days Videos Are \nTrending in Publish Countries") + 
+  labs(caption="Figure 16")+
   theme(text = element_text(family = "Times New Roman", color = "grey20"))
 ```
 
-The above plot shows the number of days videos are trending in each of the four publish countries using the proportion of videos. This graph is also filtered for the number of days trending as less than 100 because there were some very large outliers that made the graphs very difficult to read. As we can see, in Canada and France it appears that the videos they published trend for shorter periods of time - usually less than a week. In Great Britain and the US, however, the videos published tend to trend for longer. While it appears that the majority of these videos trend for two weeks or less, Great Britain videos can trend up to about 50 days, and US videos can trend up to about 60 days. In every country other than the US, the largest proportion of videos trend for one day. In the US, however, there is a spike of the greatest proportion at about one week. The median number of days videos are trending in Canada and France is 1. In Great Britain it is 10, which we see from the curve not tapering off as quickly. In the US, videos trend for a median of 7 days.
+Figure 16 shows the number of days videos are trending in each of the four publish countries using the proportion of videos. This graph is also filtered for the number of days trending as less than 100 because there were some very large outliers that made the graphs very difficult to read. As we can see, in Canada and France it appears that the videos they published trend for shorter periods of time - usually less than a week. In Great Britain and the US, however, the videos published tend to trend for longer. While it appears that the majority of these videos trend for two weeks or less, Great Britain videos can trend up to about 50 days, and US videos can trend up to about 60 days. In every country other than the US, the largest proportion of videos trend for one day. In the US, however, there is a spike of the greatest proportion at about one week. The median number of days videos are trending in Canada and France is 1. In Great Britain it is 10, which we see from the curve not tapering off as quickly. In the US, videos trend for a median of 7 days.
 
 ```{r, echo = FALSE}
 #This only says those who trend for 2 weeks or less
@@ -539,6 +542,7 @@ The above plot shows the number of days videos are trending in each of the four 
   xlab("Number of Days Trending") + 
   ylab("Proportion of Videos") + 
   ggtitle("Number of Days Videos Are Trending in \nTop 5 Categories") + 
+  labs(caption="Figure 17")+
   theme(text = element_text(family = "Times New Roman", color = "grey20"))
 ```
 
@@ -572,12 +576,13 @@ youtube %>%
   geom_boxplot(aes(fill=category_id), show.legend=FALSE) +
   coord_flip() + xlab("Category ID") + ylab("Time Between Trending Dates") + 
   ggtitle("Days Before Videos Return to \nTrending in each Category") + 
+  labs(caption = "Figure 18")+
   theme(text = element_text(family = "Times New Roman", color = "grey20")) 
 ```
 
 Some videos were on the trending list multiple dates that were not consecutive. This plot does not include consecutive days trending. If a video leaves the trending list, it appears to be likely to come back within only a couple of days. However, there are many outliers as shown on the boxplot. Some videos in the 'Music' category even took about a month to return to the trending list. Videos in the category of 'Music' have the largest spread of time between trending dates. Videos in the category of 'News and Politics' have the smallest spread and least time between trending dates. The top 4 categories on this boxplot have a median number of days before returning to trending of 3 days. In the 'News and Politics' category, the median number of days is 2.
 
-Numerical Relationships
+## Numerical Relationships
 
 There were many possible relationships to explore, and many were explored. Following are some of the most interesting associations found.
 
@@ -586,9 +591,11 @@ youtube %>%
   distinct(video_id, .keep_all = TRUE) %>% 
   ggplot(aes(x=views, y=likes)) + geom_point(aes(color = publish_country, alpha=0), 
                                              show.legend = FALSE) + 
-  facet_wrap(~publish_country, scales = "free_y") + xlab("Views") + ylab("Likes") + 
+  facet_wrap(~publish_country, scales = "free_y") + 
+  xlab("Views") + 
+  ylab("Likes") + 
+  labs(caption="Figure 19")+
   ggtitle("Views vs. Likes in Publish Countries") + 
-  theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) 
 ```
 
@@ -599,9 +606,13 @@ youtube %>%
   distinct(video_id, .keep_all = TRUE) %>% 
   filter(category_id == "Music") %>% 
   filter(dislikes < 200000) %>% 
-  ggplot(aes(x=views, y=dislikes)) + geom_point(aes(color = publish_country, alpha=0),
-                                                show.legend = FALSE) + 
-  facet_wrap(~publish_country) + xlab("Views") + ylab("Dislikes") + 
+  ggplot(aes(x=views, y=dislikes)) + 
+  geom_point(aes(color = publish_country, alpha=0),
+                                                show.legend = FALSE) +
+  facet_wrap(~publish_country) + 
+  xlab("Views") + 
+  ylab("Dislikes") + 
+  labs(caption="Figure 20")+
   ggtitle("Views vs. Dislikes in Publish Countries for \nCategory ID: Music") +
   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
@@ -618,6 +629,7 @@ youtube %>%
   ggplot(aes(x=likes, y=comment_count)) + geom_point(aes(color = publish_country, alpha=0), 
                                                      show.legend = FALSE) +
   facet_wrap(~publish_country) + xlab("Likes") + ylab("Comment Count") + 
+  labs(caption="Figure 21")+
   ggtitle("Likes vs. Comment Count in Publish Countries for \nCategory ID: Music") + 
   theme(text = element_text(family = "Times New Roman", color = "grey20")) + 
   scale_y_continuous(labels = scales::comma) + scale_x_continuous(labels = scales::comma) + 
@@ -734,7 +746,6 @@ This table shows important metrics for trending videos that were published on ea
   - Publish Country 
   - Category 
   - Date & Time published 
-
 
 # Future Directions
 * Video Tags 
